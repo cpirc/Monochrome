@@ -1,6 +1,8 @@
 CXX = g++
 
-CXX_FLAGS = -std=c++11 -Wall -Wextra -O3 -flto -pipe
+FLAGS = -std=c++11 -Wall -Wextra -pipe
+RELEASE_FLAGS = $(FLAGS) -O3 -flto -DNDEBUG
+DEBUG_FLAGS = $(FLAGS) -fno-omit-frame-pointer -g
 
 CXX_FILES = $(wildcard *.cpp)
 HEADERS = $(wildcard *.h)
@@ -11,7 +13,16 @@ LINKS =
 EXEC = engine
 
 all: $(OBJS)
-	$(CXX) $(CXX_FLAGS) $(OBJS) -o $(EXEC) $(LINKS)
+	$(CXX) $(FLAGS) $^ -o $(EXEC) $(LINKS)
 
-$(OBJS): $(CXX_FILES) $(HEADERS)
-	$(CXX) $(CXX_FLAGS) -c $(CXX_FILES)
+release:
+	$(MAKE) FLAGS="$(RELEASE_FLAGS)"
+
+debug:
+	$(MAKE) FLAGS="$(DEBUG_FLAGS)"
+
+%.o: %.cpp $(HEADERS)
+	$(CXX) $(FLAGS) -c $< -o $@
+
+clean:
+	-rm -f $(OBJS)
