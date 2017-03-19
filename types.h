@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2017 CPirc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -25,23 +49,5 @@ enum Square : unsigned char {
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8
 };
-
-/* Check piece validity. */
-static inline bool is_ok(const Piece p)
-{
-    return (p >= PAWN && p <= KING);
-}
-
-/* Check colour validity. */
-static inline bool is_ok(const Colour c)
-{
-    return (c == US || c == THEM);
-}
-
-/* Check square validity. */
-static inline bool is_ok(const Square sq)
-{
-    return (sq >= A1 && sq <= H8);
-}
 
 #endif
