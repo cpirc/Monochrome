@@ -39,43 +39,43 @@ struct Position {
 };
 
 /* Get a piece bitboard. */
-static inline std::uint64_t get_piece(const Position& b, const Piece p)
+inline std::uint64_t get_piece(const Position& b, const Piece p)
 {
     return b.pieces[int(p)];
 }
 
 /* Get a colour bitboard. */
-static inline std::uint64_t get_colour(const Position& b, const Colour c)
+inline std::uint64_t get_colour(const Position& b, const Colour c)
 {
     return b.colours[int(c)];
 }
 
 /* Get a piece bitboard of a colour. */
-static inline std::uint64_t get_piece(const Position& b, const Piece p, const Colour c)
+inline std::uint64_t get_piece(const Position& b, const Piece p, const Colour c)
 {
     return get_piece(b, p) & get_colour(b, c);
 }
 
 /* Set a bit in a piece bitboard. */
-static inline void set_bit(Position& b, const Piece p, const Square sq)
+inline void set_bit(Position& b, const Piece p, const Square sq)
 {
     b.pieces[int(p)] |= 1ULL << sq;
 }
 
 /* Set a bit in a colour bitboard. */
-static inline void set_bit(Position& b, const Colour c, const Square sq)
+inline void set_bit(Position& b, const Colour c, const Square sq)
 {
     b.colours[int(c)] |= 1ULL << sq;
 }
 
 /* Clear a bit in a piece bitboard. */
-static inline void clear_bit(Position& b, const Piece p, const Square sq)
+inline void clear_bit(Position& b, const Piece p, const Square sq)
 {
     b.pieces[int(p)] &= ~(1ULL << sq);
 }
 
 /* Clear a bit in a colour bitboard. */
-static inline void clear_bit(Position& b, const Colour c, const Square sq)
+inline void clear_bit(Position& b, const Colour c, const Square sq)
 {
     b.colours[int(c)] &= ~(1ULL << sq);
 }
