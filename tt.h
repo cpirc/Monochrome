@@ -22,18 +22,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <cstdio>
+#ifndef TT_H
+#define TT_H
 
-#include "move.h"
-#include "position.h"
 #include "types.h"
 #include "misc.h"
-#include "tt.h"
 
-int main()
+std::uint64_t piece_sq_keys[2][6][64];
+std::uint64_t castle_keys[16];
+std::uint32_t side_keys[2];
+
+struct TranspositionTable {
+    std::uint64_t data;
+    std::uint64_t hash_key;
+};
+
+inline void initialize_keys()
 {
-    std::printf("Hello World!\n");
-
-    return 0;
+    int i, j, k;
+    for (i = 0; i < 2; ++i) {
+        side_keys[i] = get_rand64();
+        for (j = 0; j < 16; ++j) {
+            castle_keys[j] = get_rand64();
+        }
+        for (j = 0; j < 6; ++j) {
+            for (k = 0; k < 64; ++k) {
+                piece_sq_keys[i][j][k] = get_rand64();
+            }
+        }
+    }
 }
 
+#endif

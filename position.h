@@ -26,6 +26,7 @@ SOFTWARE.
 #define POSITION_H
 
 #include "types.h"
+#include "tt.h"
 
 /* A chess position. */
 struct Position {
@@ -41,13 +42,13 @@ struct Position {
 /* Get a piece bitboard. */
 inline std::uint64_t get_piece(const Position& b, const Piece p)
 {
-    return b.pieces[int(p)];
+    return b.pieces[p];
 }
 
 /* Get a colour bitboard. */
 inline std::uint64_t get_colour(const Position& b, const Colour c)
 {
-    return b.colours[int(c)];
+    return b.colours[c];
 }
 
 /* Get a piece bitboard of a colour. */
@@ -59,25 +60,54 @@ inline std::uint64_t get_piece(const Position& b, const Piece p, const Colour c)
 /* Set a bit in a piece bitboard. */
 inline void set_bit(Position& b, const Piece p, const Square sq)
 {
-    b.pieces[int(p)] |= 1ULL << sq;
+    b.pieces[p] |= 1ULL << sq;
 }
 
 /* Set a bit in a colour bitboard. */
 inline void set_bit(Position& b, const Colour c, const Square sq)
 {
-    b.colours[int(c)] |= 1ULL << sq;
+    b.colours[c] |= 1ULL << sq;
 }
 
 /* Clear a bit in a piece bitboard. */
 inline void clear_bit(Position& b, const Piece p, const Square sq)
 {
-    b.pieces[int(p)] &= ~(1ULL << sq);
+    b.pieces[p] &= ~(1ULL << sq);
 }
 
 /* Clear a bit in a colour bitboard. */
 inline void clear_bit(Position& b, const Colour c, const Square sq)
 {
-    b.colours[int(c)] &= ~(1ULL << sq);
+    b.colours[c] &= ~(1ULL << sq);
+}
+
+inline void move_piece(Position& pos, const Square from, const Square to,
+                      const Piece piece, const Colour colour)
+{
+    assert(from != to);
+    std::uint64_t from_to = (1ULL << from) ^ (1ULL << to);
+    pos.pieces[piece]    ^= from_to;
+    pos.colours[colour]  ^= from_to;
+    pos.hash_key         ^= piece_sq_keys[colour][piece][from]
+                          ^ piece_sq_keys[colour][piece][to];
+}
+
+inline void put_piece(Position& pos, const Square to, const Piece piece,
+                      const Colour colour)
+{
+    std::uint64_t to_bit = (1ULL << to);
+    pos.pieces[piece]   |= to_bit;
+    pos.colours[colour] |= to_bit;
+    pos.hash_key        |= piece_sq_keys[colour][piece][to];
+}
+
+inline void remove_piece(Position& pos, const Square from, const Piece piece,
+                      const Colour colour)
+{
+    std::uint64_t from_bit = (1ULL << from);
+    pos.pieces[piece]     |= from_bit;
+    pos.colours[colour]   |= from_bit;
+    pos.hash_key          |= piece_sq_keys[colour][piece][from];
 }
 
 #endif

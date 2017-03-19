@@ -22,18 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <cstdio>
+#ifndef MISC_H
+#define MISC_H
 
-#include "move.h"
-#include "position.h"
+#include <random>
+
 #include "types.h"
-#include "misc.h"
-#include "tt.h"
 
-int main()
+std::mt19937 rng;
+
+inline void seed_rng(std::uint32_t seed)
 {
-    std::printf("Hello World!\n");
-
-    return 0;
+    rng.seed(seed);
 }
 
+inline std::uint64_t get_rand64()
+{
+    static std::uniform_int_distribution<std::uint64_t> dist;
+    return dist(rng);
+}
+
+#endif
