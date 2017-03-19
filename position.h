@@ -48,7 +48,7 @@ static inline std::uint64_t get_piece(const Position& b, const Piece p)
 {
     assert(piece_is_ok(p));
 
-    return b.pieces[static_cast<int>(p)];
+    return b.pieces[int(p)];
 }
 
 /* Get a colour bitboard. */
@@ -56,7 +56,7 @@ static inline std::uint64_t get_colour(const Position& b, const Colour c)
 {
     assert(colour_is_ok(c));
 
-    return b.colours[static_cast<int>(c)];
+    return b.colours[int(c)];
 }
 
 /* Get a piece bitboard of a colour. */
@@ -74,7 +74,7 @@ static inline void set_bit(Position& b, const Piece p, const int sq)
     assert(piece_is_ok(p));
     assert(square_is_ok(sq));
 
-    b.pieces[static_cast<int>(p)] |= 1ULL << sq;
+    b.pieces[int(p)] |= 1ULL << sq;
 }
 
 /* Set a bit in a colour bitboard. */
@@ -83,7 +83,7 @@ static inline void set_bit(Position& b, const Colour c, const int sq)
     assert(colour_is_ok(c));
     assert(square_is_ok(sq));
 
-    b.colours[static_cast<int>(c)] |= 1ULL << sq;
+    b.colours[int(c)] |= 1ULL << sq;
 }
 
 /* Clear a bit in a piece bitboard. */
@@ -92,7 +92,7 @@ static inline void clear_bit(Position& b, const Piece p, const int sq)
     assert(piece_is_ok(p));
     assert(square_is_ok(sq));
 
-    b.pieces[static_cast<int>(p)] &= ~(1ULL << sq);
+    b.pieces[int(p)] &= ~(1ULL << sq);
 }
 
 /* Clear a bit in a colour bitboard. */
@@ -101,7 +101,7 @@ static inline void clear_bit(Position& b, const Colour c, const int sq)
     assert(colour_is_ok(c));
     assert(square_is_ok(c));
 
-    b.colours[static_cast<int>(c)] &= ~(1ULL << sq);
+    b.colours[int(c)] &= ~(1ULL << sq);
 }
 
 #endif
