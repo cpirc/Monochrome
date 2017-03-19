@@ -105,9 +105,9 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
                       const Colour colour)
 {
     std::uint64_t from_bit = (1ULL << from);
-    pos.pieces[piece]     |= from_bit;
-    pos.colours[colour]   |= from_bit;
-    pos.hash_key          |= piece_sq_keys[colour][piece][from];
+    pos.pieces[piece]     ^= from_bit;
+    pos.colours[colour]   ^= from_bit;
+    pos.hash_key          ^= piece_sq_keys[colour][piece][from];
 }
 
 #endif
