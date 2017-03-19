@@ -58,7 +58,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
 
     std::memset(&pos, 0, ( sizeof(((Position*)0)->pieces) + sizeof(((Position*)0)->colours) ));
 
-    while (square_idx <= ARR_LEN(fen_board)) {
+    while (square_idx < ARR_LEN(fen_board)) {
 
         c = fen_str[i++];
 
@@ -69,6 +69,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
         case 'b':
         case 'q':
         case 'k':
+            //printf("square_idx = %zu, piece = %c\n",
             put_piece(pos, (const Square)fen_board[square_idx], b_piece_map[c], THEM);
             square_idx++;
             break;
@@ -97,6 +98,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     c = fen_str[++i];
     pos.flipped = (c == 'w') ? false : true;
 
+    i+=2;
     do {
         c = fen_str[i++];
 
@@ -144,7 +146,13 @@ void print_position_struct(const Position &pos)
         PRINT_BITBOARD(pos.pieces[p]);
     }
 
-    printf("Side to move is: %s\n\n", (pos.flipped) ? "black" : "white");
+    printf("Positions of black pieces:\n");
+    PRINT_BITBOARD(pos.colours[US]);
+
+    printf("Positions of white pieces:\n");
+    PRINT_BITBOARD(pos.colours[THEM]);
+
+    printf("Side to move is: %s\n\n", (pos.flipped == true) ? "black" : "white");
 
     if ((pos.castle << castle_bit_mask['K']))
         printf("White king can castle kingside\n");
@@ -161,14 +169,17 @@ void print_position_struct(const Position &pos)
 
     printf("Number of half moves: %d\n", (int)pos.fifty);
 }
-
+/*
 int main(void)
 {
     Position tmp;
 
     initialize_keys();
     //parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", tmp);
-    parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);
+    //parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);
+    //parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//8//PPPP1PPP//RNBQKBNR w KQkq c6 0 2", tmp);
+    parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//5N2//PPPP1PPP//RNBQKB1R b KQkq - 1 2", tmp);
     print_position_struct(tmp);
     return 0;
 }
+*/
