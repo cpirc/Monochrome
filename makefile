@@ -1,6 +1,6 @@
 CXX = g++
 
-FLAGS = -std=c++14 -Wall -Wextra -pipe
+FLAGS = -std=c++11 -Wall -Wextra -pipe
 RELEASE_FLAGS = $(FLAGS) -O3 -flto -DNDEBUG
 DEBUG_FLAGS = $(FLAGS) -fno-omit-frame-pointer -g
 

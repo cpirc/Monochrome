@@ -113,4 +113,6 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
     pos.hash_key          ^= piece_sq_keys[colour][piece][from];
 }
 
+void parse_fen_to_position(const char* fen_str, Position& pos);
+
 #endif

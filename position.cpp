@@ -1,7 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <unordered_map>
+
+#include "types.h"
+#include "position.h"
 
 
 #define PRINT_BITBOARD(x) \
@@ -182,8 +184,9 @@ void print_position_struct(const Position &pos)
 
     printf("Number of half moves: %d\n", (int)pos.fifty);
 }
+
 /*
-int main(void)
+void parser_test(void)
 {
     Position tmp;
 
@@ -193,6 +196,5 @@ int main(void)
     //parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//8//PPPP1PPP//RNBQKBNR w KQkq c6 0 2", tmp);
     parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//5N2//PPPP1PPP//RNBQKB1R b KQkq - 1 2", tmp);
     print_position_struct(tmp);
-    return 0;
 }
 */
