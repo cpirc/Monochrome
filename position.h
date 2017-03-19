@@ -18,7 +18,7 @@ enum Colour {
 struct Position {
     std::uint64_t pieces[6];  // Bitboards containing piece locations.
     std::uint64_t colours[2]; // Bitboards containing colours of pieces.
-    Colour side;              // Side to move.
+    bool flipped;             // Side to move.
     std::uint8_t castle;      // Castling rights.
     char epsq;                // En passant square.
     char fifty;               // Fifty-move rule counter.
