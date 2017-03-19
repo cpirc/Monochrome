@@ -15,29 +15,7 @@
 #define INVALID_SQUARE (Square)64
 #define ARR_LEN(x) (sizeof(x) / sizeof(x[0]))
 
-static std::unordered_map<char, Piece>
-   b_piece_map = {
-    {'p', PAWN},
-    {'r', ROOK},
-    {'n', KNIGHT},
-    {'b', BISHOP},
-    {'q', QUEEN},
-    {'k', KING}
-}, w_piece_map = {
-    {'P', PAWN},
-    {'R', ROOK},
-    {'N', KNIGHT},
-    {'B', BISHOP},
-    {'Q', QUEEN},
-    {'K', KING}
-};
 
-static std::unordered_map<char, std::size_t> castle_bit_mask = {
-    {'q', 0},
-    {'k', 1},
-    {'Q', 2},
-    {'K', 3},
-};
 
 static const unsigned char fen_board[] = {
     A8, B8, C8, D8, E8, F8, G8, H8,
@@ -64,22 +42,51 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
 
         switch (c) {
         case 'p':
+            put_piece(pos, (const Square)fen_board[square_idx], PAWN, THEM);
+            square_idx++;
+            break;
         case 'r':
+            put_piece(pos, (const Square)fen_board[square_idx], ROOK, THEM);
+            square_idx++;
+            break;
         case 'n':
+            put_piece(pos, (const Square)fen_board[square_idx], KNIGHT, THEM);
+            square_idx++;
+            break;
         case 'b':
+            put_piece(pos, (const Square)fen_board[square_idx], BISHOP, THEM);
+            square_idx++;
+            break;
         case 'q':
+            put_piece(pos, (const Square)fen_board[square_idx], QUEEN, THEM);
+            square_idx++;
+            break;
         case 'k':
-            //printf("square_idx = %zu, piece = %c\n",
-            put_piece(pos, (const Square)fen_board[square_idx], b_piece_map[c], THEM);
+            put_piece(pos, (const Square)fen_board[square_idx], KING, THEM);
             square_idx++;
             break;
         case 'P':
+            put_piece(pos, (const Square)fen_board[square_idx], PAWN, US);
+            square_idx++;
+            break;
         case 'R':
+            put_piece(pos, (const Square)fen_board[square_idx], ROOK, US);
+            square_idx++;
+            break;
         case 'N':
+            put_piece(pos, (const Square)fen_board[square_idx], KNIGHT, US);
+            square_idx++;
+            break;
         case 'B':
+            put_piece(pos, (const Square)fen_board[square_idx], BISHOP, US);
+            square_idx++;
+            break;
         case 'Q':
+            put_piece(pos, (const Square)fen_board[square_idx], QUEEN, US);
+            square_idx++;
+            break;
         case 'K':
-            put_piece(pos, (const Square)fen_board[square_idx], w_piece_map[c], US);
+            put_piece(pos, (const Square)fen_board[square_idx], KING, US);
             square_idx++;
             break;
         case '1':
@@ -104,10 +111,16 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
 
         switch (c) {
         case 'K':
+            pos.castle |= 1 << 3;
+            break;
         case 'Q':
+            pos.castle |= 1 << 2;
+            break;
         case 'k':
+            pos.castle |= 1 << 1;
+            break;
         case 'q':
-            pos.castle |= 1 << castle_bit_mask[c];
+            pos.castle |= 1 << 0;
             break;
         case '-':
             pos.castle = 0;
@@ -154,14 +167,14 @@ void print_position_struct(const Position &pos)
 
     printf("Side to move is: %s\n\n", (pos.flipped == true) ? "black" : "white");
 
-    if ((pos.castle << castle_bit_mask['K']))
+    if ((pos.castle & (1 << 3)))
         printf("White king can castle kingside\n");
-    if ((pos.castle << castle_bit_mask['Q']))
+    if ((pos.castle & (1 << 2)))
         printf("White king can castle queenside\n");
 
-    if ((pos.castle << castle_bit_mask['k']))
+    if ((pos.castle & (1 << 1)))
         printf("Black king can castle kingside\n");
-    if ((pos.castle << castle_bit_mask['q']))
+    if ((pos.castle & (1 << 0)))
         printf("Black king can castle queenside\n");
 
     if (pos.epsq != INVALID_SQUARE)
