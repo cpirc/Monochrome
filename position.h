@@ -44,7 +44,11 @@ extern std::uint64_t castle_keys[16];
 extern std::uint64_t piece_sq_keys[2][6][64];
 
 extern void initialize_keys();
+
+/* Extract data from a FEN string to a Position struct */
 extern void parse_fen_to_position(Position& pos, const char* fen_str);
+
+extern void run_fen_parser_tests();
 
 /* Get a piece bitboard. */
 inline std::uint64_t get_piece(const Position& b, const Piece p)

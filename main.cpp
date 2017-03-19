@@ -34,6 +34,7 @@ SOFTWARE.
 int main()
 {
     std::printf("Hello World!\n");
+    run_fen_parser_tests();
 
     return 0;
 }

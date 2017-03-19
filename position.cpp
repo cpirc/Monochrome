@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2017 CPirc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -126,6 +150,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     pos.flipped = (c == 'w') ? false : true;
 
     i+=2;
+    pos.castle = 0;
     do {
         c = fen_str[i++];
 
@@ -143,7 +168,6 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
             pos.castle |= 1 << 0;
             break;
         case '-':
-            pos.castle = 0;
             c = fen_str[i++];
             break;
         }
@@ -203,16 +227,17 @@ void print_position_struct(const Position &pos)
     printf("Number of half moves: %d\n", (int)pos.fifty);
 }
 
-/*
-void parser_test(void)
+void run_fen_parser_tests()
 {
     Position tmp;
 
     initialize_keys();
-    //parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", tmp);
-    //parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);
-    //parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//8//PPPP1PPP//RNBQKBNR w KQkq c6 0 2", tmp);
-    parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//5N2//PPPP1PPP//RNBQKB1R b KQkq - 1 2", tmp);
+    parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", tmp);
+    print_position_struct(tmp);
+    parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);
+    print_position_struct(tmp);
+    parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//8//PPPP1PPP//RNBQKBNR w KQkq c6 0 2", tmp);
+    print_position_struct(tmp);
+    parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//5N2//PPPP1PPP//RNBQKB1R b Qkq - 1 2", tmp);
     print_position_struct(tmp);
 }
-*/
