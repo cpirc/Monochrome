@@ -39,6 +39,13 @@ struct Position {
     std::uint64_t hash_key;   // Zobrist hash of the current position.
 };
 
+extern std::uint64_t side_keys[2];
+extern std::uint64_t castle_keys[16];
+extern std::uint64_t piece_sq_keys[2][6][64];
+
+extern void initialize_keys();
+extern void parse_fen_to_position(Position& pos, const char* fen_str);
+
 /* Get a piece bitboard. */
 inline std::uint64_t get_piece(const Position& b, const Piece p)
 {
@@ -112,7 +119,5 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
     pos.colours[colour]   ^= from_bit;
     pos.hash_key          ^= piece_sq_keys[colour][piece][from];
 }
-
-void parse_fen_to_position(const char* fen_str, Position& pos);
 
 #endif

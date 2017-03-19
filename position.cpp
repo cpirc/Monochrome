@@ -5,6 +5,27 @@
 #include "types.h"
 #include "position.h"
 
+/* The zobrist keys used to hash the position */
+std::uint64_t piece_sq_keys[2][6][64];
+std::uint64_t castle_keys[16];
+std::uint64_t side_keys[2];
+
+/* Initialize the zobrist keys */
+void initialize_keys()
+{
+    int i, j, k;
+    for (i = 0; i < 2; ++i) {
+        side_keys[i] = get_rand64();
+        for (j = 0; j < 16; ++j) {
+            castle_keys[j] = get_rand64();
+        }
+        for (j = 0; j < 6; ++j) {
+            for (k = 0; k < 64; ++k) {
+                piece_sq_keys[i][j][k] = get_rand64();
+            }
+        }
+    }
+}
 
 #define PRINT_BITBOARD(x) \
     for (int i = 0; i < 64; i++) { \
@@ -14,10 +35,7 @@
     } \
     putchar('\n');
 
-#define INVALID_SQUARE (Square)64
 #define ARR_LEN(x) (sizeof(x) / sizeof(x[0]))
-
-
 
 static const unsigned char fen_board[] = {
     A8, B8, C8, D8, E8, F8, G8, H8,

@@ -28,32 +28,10 @@ SOFTWARE.
 #include "types.h"
 #include "misc.h"
 
-/* The zobrist keys used to hash the position */
-std::uint64_t piece_sq_keys[2][6][64];
-std::uint64_t castle_keys[16];
-std::uint64_t side_keys[2];
-
 /* The transposition table */
 struct TranspositionTable {
     std::uint64_t data;
     std::uint64_t hash_key;
 };
-
-/* Initialize the zobrist keys */
-inline void initialize_keys()
-{
-    int i, j, k;
-    for (i = 0; i < 2; ++i) {
-        side_keys[i] = get_rand64();
-        for (j = 0; j < 16; ++j) {
-            castle_keys[j] = get_rand64();
-        }
-        for (j = 0; j < 6; ++j) {
-            for (k = 0; k < 64; ++k) {
-                piece_sq_keys[i][j][k] = get_rand64();
-            }
-        }
-    }
-}
 
 #endif

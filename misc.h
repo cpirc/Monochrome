@@ -30,7 +30,7 @@ SOFTWARE.
 #include "types.h"
 
 /* The Mersenne twister random number generator */
-std::mt19937 rng;
+static std::mt19937 rng;
 
 /* Seed the random number generator with the specified seed */
 inline void seed_rng(std::uint32_t seed)
