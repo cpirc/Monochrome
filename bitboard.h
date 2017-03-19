@@ -31,7 +31,7 @@ SOFTWARE.
 #include "types.h"
 
 /* Bitboard masks for ranks on a chessboard. */
-static const std::uint64_t RankMask[8] = {
+static const std::uint64_t rank_mask[8] = {
     0x00000000000000FFULL,
     0x000000000000FF00ULL,
     0x0000000000FF0000ULL,
@@ -43,7 +43,7 @@ static const std::uint64_t RankMask[8] = {
 };
 
 /* Bitboard masks for files on a chessboard. */
-static const std::uint64_t FileMask[8] = {
+static const std::uint64_t file_mask[8] = {
     0x0101010101010101ULL,
     0x0202020202020202ULL,
     0x0404040404040404ULL,
@@ -55,54 +55,54 @@ static const std::uint64_t FileMask[8] = {
 };
 
 /* Precalculated piece attacks for a square. */
-extern std::uint64_t PawnMask[64];
-extern std::uint64_t KnightMask[64];
-extern std::uint64_t KingMask[64];
+extern std::uint64_t pawn_mask[64];
+extern std::uint64_t knight_mask[64];
+extern std::uint64_t king_mask[64];
 
 /* Get attacks for a piece. */
 template<Piece p>
-std::uint64_t Attacks(const Square sq, const std::uint64_t occ);
+std::uint64_t attacks(const Square sq, const std::uint64_t occ);
 
 /* Get pawn attacks. */
 template<>
-inline std::uint64_t Attacks<PAWN>(const Square sq, const std::uint64_t)
+inline std::uint64_t attacks<PAWN>(const Square sq, const std::uint64_t)
 {
-    return PawnMask[sq];
+    return pawn_mask[sq];
 }
 
 /* Get knight attacks. */
 template<>
-inline std::uint64_t Attacks<KNIGHT>(const Square sq, const std::uint64_t)
+inline std::uint64_t attacks<KNIGHT>(const Square sq, const std::uint64_t)
 {
-    return KnightMask[sq];
+    return knight_mask[sq];
 }
 
 /* Get bishop attacks. */
 template<>
-inline std::uint64_t Attacks<BISHOP>(const Square sq, const std::uint64_t occ)
+inline std::uint64_t attacks<BISHOP>(const Square sq, const std::uint64_t occ)
 {
     return Bmagic(sq, occ);
 }
 
 /* Get rook attacks. */
 template<>
-inline std::uint64_t Attacks<ROOK>(const Square sq, const std::uint64_t occ)
+inline std::uint64_t attacks<ROOK>(const Square sq, const std::uint64_t occ)
 {
     return Rmagic(sq, occ);
 }
 
 /* Get queen attacks. */
 template<>
-inline std::uint64_t Attacks<QUEEN>(const Square sq, const std::uint64_t occ)
+inline std::uint64_t attacks<QUEEN>(const Square sq, const std::uint64_t occ)
 {
     return Bmagic(sq, occ) | Rmagic(sq, occ);
 }
 
 /* Get king attacks. */
 template<>
-inline std::uint64_t Attacks<KING>(const Square sq, const std::uint64_t)
+inline std::uint64_t attacks<KING>(const Square sq, const std::uint64_t)
 {
-    return KingMask[sq];
+    return king_mask[sq];
 }
 
 #endif

@@ -29,9 +29,9 @@
 #include "bitboard.h"
 #include "types.h"
 
-std::uint64_t PawnMask[64];
-std::uint64_t KnightMask[64];
-std::uint64_t KingMask[64];
+std::uint64_t pawn_mask[64];
+std::uint64_t knight_mask[64];
+std::uint64_t king_mask[64];
 
 void init_bitboards()
 {
@@ -40,34 +40,34 @@ void init_bitboards()
     // Pawns
     for (sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
-        PawnMask[sq] = ((from << 7) & ~FileMask[FILE_H]) | ((from << 9) & ~FileMask[FILE_A]);
+        pawn_mask[sq] = ((from << 7) & ~file_mask[FILE_H]) | ((from << 9) & ~file_mask[FILE_A]);
     }
 
     // Knights
     for (sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
-        KnightMask[sq]  = (from>>17) & (~FileMask[FILE_H]); // Up 2 right 1
-        KnightMask[sq] |= (from>>15) & (~FileMask[FILE_A]); // Up 2 left 1
-        KnightMask[sq] |= (from<<17) & (~FileMask[FILE_A]); // Down 2 left 1
-        KnightMask[sq] |= (from<<15) & (~FileMask[FILE_H]); // Down 2 right 1
-        KnightMask[sq] |= (from>>10) & ~(FileMask[FILE_G]|FileMask[FILE_H]); // Right 2 up 1
-        KnightMask[sq] |= (from<<6)  & ~(FileMask[FILE_G]|FileMask[FILE_H]); // Right 2 down 1
-        KnightMask[sq] |= (from>>6)  & ~(FileMask[FILE_A]|FileMask[FILE_B]); // Left 2 up 1
-        KnightMask[sq] |= (from<<10) & ~(FileMask[FILE_A]|FileMask[FILE_B]); // Left 2 up 1
-        KnightMask[sq] |= (from<<10) & ~(FileMask[FILE_A]|FileMask[FILE_B]); // Left 2 down 1
+        knight_mask[sq]  = (from>>17) & (~file_mask[FILE_H]); // Up 2 right 1
+        knight_mask[sq] |= (from>>15) & (~file_mask[FILE_A]); // Up 2 left 1
+        knight_mask[sq] |= (from<<17) & (~file_mask[FILE_A]); // Down 2 left 1
+        knight_mask[sq] |= (from<<15) & (~file_mask[FILE_H]); // Down 2 right 1
+        knight_mask[sq] |= (from>>10) & ~(file_mask[FILE_G]|file_mask[FILE_H]); // Right 2 up 1
+        knight_mask[sq] |= (from<<6)  & ~(file_mask[FILE_G]|file_mask[FILE_H]); // Right 2 down 1
+        knight_mask[sq] |= (from>>6)  & ~(file_mask[FILE_A]|file_mask[FILE_B]); // Left 2 up 1
+        knight_mask[sq] |= (from<<10) & ~(file_mask[FILE_A]|file_mask[FILE_B]); // Left 2 up 1
+        knight_mask[sq] |= (from<<10) & ~(file_mask[FILE_A]|file_mask[FILE_B]); // Left 2 down 1
     }
 
     // Kings
     for (sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
-        KingMask[sq]  = (from>>8); // Up 1
-        KingMask[sq] |= (from<<8); // Down 1
-        KingMask[sq] |= (from>>1) & (~FileMask[FILE_H]); // Right 1
-        KingMask[sq] |= (from<<1) & (~FileMask[FILE_A]); // Left 1
-        KingMask[sq] |= (from>>7) & (~FileMask[FILE_A]); // Up 1 Left 1
-        KingMask[sq] |= (from>>9) & (~FileMask[FILE_H]); // Up 1 Right 1
-        KingMask[sq] |= (from<<7) & (~FileMask[FILE_H]); // Down 1 Right 1
-        KingMask[sq] |= (from<<9) & (~FileMask[FILE_A]); // Down 1 Left 1
+        king_mask[sq]  = (from>>8); // Up 1
+        king_mask[sq] |= (from<<8); // Down 1
+        king_mask[sq] |= (from>>1) & (~file_mask[FILE_H]); // Right 1
+        king_mask[sq] |= (from<<1) & (~file_mask[FILE_A]); // Left 1
+        king_mask[sq] |= (from>>7) & (~file_mask[FILE_A]); // Up 1 Left 1
+        king_mask[sq] |= (from>>9) & (~file_mask[FILE_H]); // Up 1 Right 1
+        king_mask[sq] |= (from<<7) & (~file_mask[FILE_H]); // Down 1 Right 1
+        king_mask[sq] |= (from<<9) & (~file_mask[FILE_A]); // Down 1 Left 1
     }
 }
 
