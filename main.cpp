@@ -24,8 +24,9 @@ SOFTWARE.
 
 #include <cstdio>
 
-#include "position.h"
 #include "move.h"
+#include "position.h"
+#include "types.h"
 
 int main()
 {
