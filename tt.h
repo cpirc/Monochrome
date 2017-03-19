@@ -30,7 +30,7 @@ SOFTWARE.
 
 std::uint64_t piece_sq_keys[2][6][64];
 std::uint64_t castle_keys[16];
-std::uint32_t side_keys[2];
+std::uint64_t side_keys[2];
 
 struct TranspositionTable {
     std::uint64_t data;
