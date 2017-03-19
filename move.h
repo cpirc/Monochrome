@@ -66,26 +66,31 @@ enum PromotionType : unsigned int {
 
 typedef unsigned int Move;
 
+/* Get from square from move */
 inline Square from_square(const Move move)
 {
     return Square(move & FROM_SQ_MASK);
 }
 
+/* Get to square from move */
 inline Square to_square(const Move move)
 {
     return Square((move & TO_SQ_MASK) >> TO_SQ_SHIFT);
 }
 
+/* Get move type from move */
 inline MoveType move_type(const Move move)
 {
     return MoveType((move & MOVE_TYPE_MASK) >> MOVE_TYPE_SHIFT);
 }
 
+/* Get promotion type from move */
 inline PromotionType promotion_type(const Move move)
 {
     return PromotionType((move & PROM_TYPE_MASK) >> PROM_TYPE_SHIFT);
 }
 
+/* Get move by encoding it's components together */
 inline Move get_move(Square from, Square to, MoveType move_type, PromotionType prom_type = NONE)
 {
     return Move(from | (to << TO_SQ_SHIFT) | (move_type << MOVE_TYPE_SHIFT) | (prom_type << PROM_TYPE_SHIFT));

@@ -29,13 +29,16 @@ SOFTWARE.
 
 #include "types.h"
 
+/* The Mersenne twister random number generator */
 std::mt19937 rng;
 
+/* Seed the random number generator with the specified seed */
 inline void seed_rng(std::uint32_t seed)
 {
     rng.seed(seed);
 }
 
+/* Get a random 64 bit number */
 inline std::uint64_t get_rand64()
 {
     static std::uniform_int_distribution<std::uint64_t> dist;

@@ -81,6 +81,7 @@ inline void clear_bit(Position& b, const Colour c, const Square sq)
     b.colours[c] &= ~(1ULL << sq);
 }
 
+/* Updates the position by moving piece from 'from' to 'to' */
 inline void move_piece(Position& pos, const Square from, const Square to,
                       const Piece piece, const Colour colour)
 {
@@ -92,6 +93,7 @@ inline void move_piece(Position& pos, const Square from, const Square to,
                           ^ piece_sq_keys[colour][piece][to];
 }
 
+/* Updates the position by putting piece on 'to' */
 inline void put_piece(Position& pos, const Square to, const Piece piece,
                       const Colour colour)
 {
@@ -101,6 +103,7 @@ inline void put_piece(Position& pos, const Square to, const Piece piece,
     pos.hash_key        ^= piece_sq_keys[colour][piece][to];
 }
 
+/* Updates the position by removing piece from 'from' */
 inline void remove_piece(Position& pos, const Square from, const Piece piece,
                       const Colour colour)
 {

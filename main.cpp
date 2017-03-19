@@ -30,6 +30,7 @@ SOFTWARE.
 #include "misc.h"
 #include "tt.h"
 
+/* The start of all things (after _start) */
 int main()
 {
     std::printf("Hello World!\n");
