@@ -2,4 +2,4 @@
 
 The CPirc Chess Engine.
 
-visit ##chessprogramming on Freenode IRC for more information.
+Visit ##chessprogramming on http://webchat.freenode.net/ more information.
