@@ -27,13 +27,6 @@ SOFTWARE.
 #include "position.h"
 #include "types.h"
 
-/* Get least significant bit. */
-static inline Square lsb(std::uint64_t bb)
-{
-    assert(bb);
-    return Square(__builtin_ctzll(bb));
-}
-
 /* Generic move serialisation loop. */
 template<bool captures, Piece pc> void add_moves(const Position & pos, Move* ml, int& idx)
 {

@@ -87,6 +87,11 @@ inline std::uint64_t get_colour(const Position& b, const Colour c)
     return b.colours[c];
 }
 
+inline std::uint64_t get_occupancy(const Position& pos)
+{
+    return pos.colours[US] | pos.colours[THEM];
+}
+
 /* Get a piece bitboard of a colour. */
 inline std::uint64_t get_piece(const Position& b, const Piece p, const Colour c)
 {

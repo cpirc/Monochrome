@@ -60,6 +60,13 @@ extern std::uint64_t pawn_mask[2][64];
 extern std::uint64_t knight_mask[64];
 extern std::uint64_t king_mask[64];
 
+/* Get least significant bit. */
+inline Square lsb(std::uint64_t bb)
+{
+    assert(bb);
+    return Square(__builtin_ctzll(bb));
+}
+
 /* Get attacks for a piece. */
 template<Piece p>
 std::uint64_t attacks(const Square sq, const std::uint64_t occ);
@@ -123,6 +130,11 @@ template<>
 inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
 {
     return attacks<KING>(sq, occ) & get_piece(pos, KING);
+}
+
+inline bool is_checked(const Position& pos, const Colour c)
+{
+    return attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos)) > std::uint64_t(0);
 }
 
 #endif
