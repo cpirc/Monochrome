@@ -70,7 +70,6 @@ void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
     std::uint64_t empty = ~(get_colour(pos, US) | get_colour(pos, THEM));
-    //std::uint64_t them = get_colour(pos, THEM); // Unused
     std::uint64_t singles, doubles;
 
     // Single push
@@ -130,7 +129,6 @@ void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
 template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
-    std::uint64_t pieces = get_colour(pos, US) | get_colour(pos, THEM);
     std::uint64_t them = get_colour(pos, THEM);
     std::uint64_t dest_bb;
 
