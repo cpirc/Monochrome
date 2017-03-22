@@ -37,6 +37,8 @@ void init_bitboards()
 {
     int sq;
 
+    initmagicmoves();
+
     // Pawns
     for (sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;

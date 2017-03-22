@@ -137,5 +137,7 @@ inline bool is_checked(const Position& pos, const Colour c)
     return attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos)) > std::uint64_t(0);
 }
 
+extern void init_bitboards();
+
 #endif
 

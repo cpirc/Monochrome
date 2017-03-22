@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include <cstdio>
 
+#include "bitboard.h"
 #include "move.h"
 #include "position.h"
 #include "types.h"
@@ -34,6 +35,9 @@ SOFTWARE.
 int main()
 {
     std::printf("Hello World!\n");
+
+    init_bitboards();
+
     //run_fen_parser_tests();
     run_perft_tests();
 
