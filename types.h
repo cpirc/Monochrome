@@ -63,6 +63,7 @@ enum File : unsigned char {
     FILE_E, FILE_F, FILE_G, FILE_H
 };
 
+<<<<<<< HEAD
 /* Castling rights. */
 enum {
     US_OO    = 1 << 3,
@@ -70,5 +71,23 @@ enum {
     THEM_OO  = 1 << 1,
     THEM_OOO = 1 << 0
 };
+
+#define ENABLE_OPERATIONS(T)                                                   \
+constexpr inline T operator+(T l, T r)   { return T((int)(l) + (int)(r)); }    \
+constexpr inline T operator+(T l, int r) { return T((int)(l) + r);        }    \
+constexpr inline T operator+(int l, T r) { return T(l + (int)(r));        }    \
+constexpr inline T operator-(T l, T r)   { return T((int)(l) - (int)(r)); }    \
+constexpr inline T operator-(T l, int r) { return T((int)(l) - r);        }    \
+constexpr inline T operator-(int l, T r) { return T(l - (int)(r));        }    \
+inline T operator+=(T& l, T r)           { return l = l + r;              }    \
+inline T operator-=(T& l, T r)           { return l = l - r;              }    \
+inline T operator++(T& l)                { return l = l + 1;              }    \
+inline T operator--(T& l)                { return l = l - 1;              }
+
+ENABLE_OPERATIONS(Piece)
+ENABLE_OPERATIONS(Colour)
+ENABLE_OPERATIONS(Square)
+ENABLE_OPERATIONS(Rank)
+ENABLE_OPERATIONS(File)
 
 #endif
