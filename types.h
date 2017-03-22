@@ -30,7 +30,7 @@ SOFTWARE.
 
 /* Pieces on a chessboard. */
 enum Piece : unsigned char {
-    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
+    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, NO_PIECE
 };
 
 /* Colours on a chessboard: */

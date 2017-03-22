@@ -26,6 +26,7 @@ SOFTWARE.
 #define MOVE_H
 
 #include "types.h"
+#include "position.h"
 
 /*
  * The move encoding scheme:
@@ -85,9 +86,9 @@ inline MoveType move_type(const Move move)
 }
 
 /* Get promotion type from move */
-inline PromotionType promotion_type(const Move move)
+inline Piece promotion_type(const Move move)
 {
-    return PromotionType((move & PROM_TYPE_MASK) >> PROM_TYPE_SHIFT);
+    return Piece((move & PROM_TYPE_MASK) >> PROM_TYPE_SHIFT);
 }
 
 /* Get move by encoding it's components together */
@@ -95,5 +96,7 @@ inline Move get_move(Square from, Square to, MoveType move_type, PromotionType p
 {
     return Move(from | (to << TO_SQ_SHIFT) | (move_type << MOVE_TYPE_SHIFT) | (prom_type << PROM_TYPE_SHIFT));
 }
+
+extern void make_move(Position& pos, const Move move);
 
 #endif
