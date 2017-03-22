@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 #include "move.h"
+#include "position.h"
+#include "types.h"
 
 void make_move(Position& pos, const Move move)
 {

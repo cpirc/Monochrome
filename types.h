@@ -63,6 +63,14 @@ enum File : unsigned char {
     FILE_E, FILE_F, FILE_G, FILE_H
 };
 
+/* Castling rights. */
+enum {
+    US_OO    = 1 << 3,
+    US_OOO   = 1 << 2,
+    THEM_OO  = 1 << 1,
+    THEM_OOO = 1 << 0
+};
+
 #define ENABLE_OPERATIONS(T)                                                   \
 constexpr inline T operator+(T l, T r)   { return T((int)(l) + (int)(r)); }    \
 constexpr inline T operator+(T l, int r) { return T((int)(l) + r);        }    \

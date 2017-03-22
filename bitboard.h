@@ -28,6 +28,7 @@ SOFTWARE.
 #include <cinttypes>
 
 #include "magic_moves.h"
+#include "position.h"
 #include "types.h"
 
 /* Bitboard masks for ranks on a chessboard. */
@@ -55,7 +56,7 @@ static const std::uint64_t file_mask[8] = {
 };
 
 /* Precalculated piece attacks for a square. */
-extern std::uint64_t pawn_mask[64];
+extern std::uint64_t pawn_mask[2][64];
 extern std::uint64_t knight_mask[64];
 extern std::uint64_t king_mask[64];
 
@@ -67,7 +68,12 @@ std::uint64_t attacks(const Square sq, const std::uint64_t occ);
 template<>
 inline std::uint64_t attacks<PAWN>(const Square sq, const std::uint64_t)
 {
-    return pawn_mask[sq];
+    return pawn_mask[US][sq];
+}
+
+inline std::uint64_t pawn_attacks(const Square sq, const Colour c)
+{
+    return pawn_mask[c][sq];
 }
 
 /* Get knight attacks. */
@@ -103,6 +109,20 @@ template<>
 inline std::uint64_t attacks<KING>(const Square sq, const std::uint64_t)
 {
     return king_mask[sq];
+}
+
+/* Get any piece attacks to a square. */
+template<Piece p = PAWN>
+inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ);
+}
+
+/* Finish above template. */
+template<>
+inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return attacks<KING>(sq, occ) & get_piece(pos, KING);
 }
 
 #endif
