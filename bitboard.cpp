@@ -29,7 +29,7 @@
 #include "bitboard.h"
 #include "types.h"
 
-std::uint64_t pawn_mask[64];
+std::uint64_t pawn_mask[2][64];
 std::uint64_t knight_mask[64];
 std::uint64_t king_mask[64];
 
@@ -40,7 +40,8 @@ void init_bitboards()
     // Pawns
     for (sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
-        pawn_mask[sq] = ((from << 7) & ~file_mask[FILE_H]) | ((from << 9) & ~file_mask[FILE_A]);
+        pawn_mask[US][sq] = ((from << 7) & ~file_mask[FILE_H]) | ((from << 9) & ~file_mask[FILE_A]);
+        pawn_mask[THEM][sq] = ((from >> 7) & ~file_mask[FILE_A]) | ((from >> 9) & ~file_mask[FILE_H]);
     }
 
     // Knights

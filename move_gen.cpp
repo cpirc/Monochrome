@@ -202,10 +202,7 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
 
     // En passant
     if (pos.epsq != INVALID_SQUARE) {
-        // This could be incorrect, we'll see.
-        pawns = 1ULL << pos.epsq;
-        dest_bb  = (pieces >> 7) & ~file_mask[FILE_A] & get_piece(pos, PAWN, THEM);
-        dest_bb |= (pieces >> 9) & ~file_mask[FILE_H] * get_piece(pos, PAWN, THEM);
+        pawns = pawn_attacks(pos.epsq, THEM) & get_piece(pos, PAWN, THEM);
 
         while (dest_bb) {
             Square from = lsb(dest_bb);

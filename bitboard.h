@@ -55,7 +55,7 @@ static const std::uint64_t file_mask[8] = {
 };
 
 /* Precalculated piece attacks for a square. */
-extern std::uint64_t pawn_mask[64];
+extern std::uint64_t pawn_mask[2][64];
 extern std::uint64_t knight_mask[64];
 extern std::uint64_t king_mask[64];
 
@@ -67,7 +67,12 @@ std::uint64_t attacks(const Square sq, const std::uint64_t occ);
 template<>
 inline std::uint64_t attacks<PAWN>(const Square sq, const std::uint64_t)
 {
-    return pawn_mask[sq];
+    return pawn_mask[US][sq];
+}
+
+inline std::uint64_t pawn_attacks(const Square sq, const Colour c)
+{
+    return pawn_mask[c][sq];
 }
 
 /* Get knight attacks. */
