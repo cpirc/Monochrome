@@ -56,7 +56,7 @@ inline Piece get_piece_on_square(const Position& pos, const std::uint64_t sq)
 {
     if (pos.pieces[piece] & sq)
         return piece;
-    return get_piece_on_square<piece+1>(pos, sq);
+    return get_piece_on_square<Piece((unsigned char)(piece)+1)>(pos, sq);
 }
 
 /* Get the type of piece on a square(bitboard of the square) */
