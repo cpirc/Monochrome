@@ -60,7 +60,7 @@ template<bool captures, Piece pc> void add_moves(const Position & pos, Move* ml,
         pieces &= pieces - 1;
     }
 
-    add_moves<captures, Piece(pc+1)>(pos, ml, idx);
+    add_moves<captures, pc+1>(pos, ml, idx);
 }
 
 /* Specialisation for pawn quiets. */
