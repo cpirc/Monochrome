@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "bitboard.h"
+#include "move.h"
+#include "position.h"
+#include "types.h"
+
 /* Get least significant bit. */
 static inline Square lsb(std::uint64_t bb)
 {
@@ -30,8 +35,7 @@ static inline Square lsb(std::uint64_t bb)
 }
 
 /* Generic move serialisation loop. */
-template<bool captures, Piece pc>
-void add_moves(const Position& pos, Move[]& ml, int& idx)
+template<bool captures, Piece pc> void add_moves(const Position & pos, Move[]& ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, pc, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
@@ -56,7 +60,7 @@ void add_moves(const Position& pos, Move[]& ml, int& idx)
         pieces &= pieces - 1;
     }
 
-    add_moves<captures, pc + 1>(pos, ml, idx);
+    add_moves<captures, Piece(pc+1)>(pos, ml, idx);
 }
 
 /* Specialisation for pawn quiets. */
@@ -123,8 +127,7 @@ void add_moves<false, PAWN>(const Position& pos, Move[]& ml, int& idx)
 
 /* Specialisation for pawn captures. */
 /* (en-passant, capture-promotions) */
-template<>
-void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
+template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
 {
     std::uint64_t pawns = get_piece(pos, pc, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
