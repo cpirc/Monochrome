@@ -28,6 +28,7 @@ SOFTWARE.
 #include <cinttypes>
 
 #include "magic_moves.h"
+#include "position.h"
 #include "types.h"
 
 /* Bitboard masks for ranks on a chessboard. */
@@ -108,6 +109,20 @@ template<>
 inline std::uint64_t attacks<KING>(const Square sq, const std::uint64_t)
 {
     return king_mask[sq];
+}
+
+/* Get any piece attacks to a square. */
+template<Piece p = PAWN>
+inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ);
+}
+
+/* Finish above template. */
+template<>
+inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return attacks<KING>(sq, occ) & get_piece(pos, KING);
 }
 
 #endif
