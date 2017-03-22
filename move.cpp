@@ -26,7 +26,7 @@ SOFTWARE.
 
 void make_move(Position& pos, const Move move)
 {
-    static int const castling_lookup[64] = {
+    static unsigned char const castling_lookup[64] = {
         13, 15, 15, 15, 12, 15, 15, 14,
         15, 15, 15, 15, 15, 15, 15, 15,
         15, 15, 15, 15, 15, 15, 15, 15,
@@ -55,11 +55,11 @@ void make_move(Position& pos, const Move move)
         break;
     case DOUBLE_PUSH:
         move_piece(pos, from, to, PAWN, US);
-        pos.epsq = Square((unsigned char)(from) + 8);
+        pos.epsq = from + 8;
         break;
     case ENPASSANT:
         move_piece(pos, from, to, PAWN, US);
-        remove_piece(pos, Square((unsigned char)(to) - 8), PAWN, THEM);
+        remove_piece(pos, to - 8, PAWN, THEM);
         break;
     case CASTLE:
         move_piece(pos, from, to, KING, US);
