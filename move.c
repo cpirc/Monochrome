@@ -70,12 +70,6 @@ void make_move(Position& pos, const Move move)
         case G1:
             move_piece(pos, H1, F1, ROOK, US);
             break;
-        case C8:
-            move_piece(pos, A8, D8, ROOK, US);
-            break;
-        case G8:
-            move_piece(pos, H8, F8, ROOK, US);
-            break;
         default:
             break;
         }
