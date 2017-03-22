@@ -46,7 +46,7 @@ extern std::uint64_t piece_sq_keys[2][6][64];
 extern void initialize_keys();
 
 /* Extract data from a FEN string to a Position struct */
-extern void parse_fen_to_position(Position& pos, const char* fen_str);
+extern void parse_fen_to_position(const char* fen_str, Position& pos);
 
 extern void run_fen_parser_tests();
 
@@ -153,5 +153,8 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
     pos.colours[colour]   ^= from_bit;
     pos.hash_key          ^= piece_sq_keys[colour][piece][from];
 }
+
+extern std::uint64_t perft(const Position& pos, int depth);
+extern void run_perft_tests();
 
 #endif

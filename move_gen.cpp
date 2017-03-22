@@ -28,7 +28,7 @@ SOFTWARE.
 #include "types.h"
 
 /* Generic move serialisation loop. */
-template<bool captures, Piece pc> void add_moves(const Position & pos, Move* ml, int& idx)
+template<bool captures, Piece pc = PAWN> void add_moves(const Position & pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, pc, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
@@ -262,4 +262,15 @@ void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
     }
 
     // No tail call to end template recursion.
+}
+
+/* Generate moves for a position. */
+int generate(const Position& pos, Move* ml)
+{
+    int idx = 0;
+
+    add_moves<true>(pos, ml, idx);
+    add_moves<false>(pos, ml, idx);
+
+    return idx;
 }
