@@ -50,6 +50,31 @@ extern void parse_fen_to_position(Position& pos, const char* fen_str);
 
 extern void run_fen_parser_tests();
 
+/* Get the type of piece on a square(bitboard of the square) */
+template<Piece piece = PAWN>
+inline Piece get_piece_on_square(const Position& pos, const std::uint64_t sq)
+{
+    if (pos.pieces[piece] & sq)
+        return piece;
+    return get_piece_on_square<piece+1>(pos, sq);
+}
+
+/* Get the type of piece on a square(bitboard of the square) */
+template<>
+inline Piece get_piece_on_square<KING>(const Position& pos, const std::uint64_t sq)
+{
+    if (pos.pieces[KING] & sq)
+        return KING;
+    return NO_PIECE;
+}
+
+/* Get the type of piece on a square */
+template<Piece piece = PAWN>
+inline Piece get_piece_on_square(const Position& pos, const Square sq)
+{
+    return get_piece_on_square<piece>(pos, (1ULL << sq));
+}
+
 /* Get a piece bitboard. */
 inline std::uint64_t get_piece(const Position& b, const Piece p)
 {
