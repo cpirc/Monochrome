@@ -35,7 +35,7 @@ static inline Square lsb(std::uint64_t bb)
 }
 
 /* Generic move serialisation loop. */
-template<bool captures, Piece pc> void add_moves(const Position & pos, Move[]& ml, int& idx)
+template<bool captures, Piece pc> void add_moves(const Position & pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, pc, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
@@ -49,7 +49,7 @@ template<bool captures, Piece pc> void add_moves(const Position & pos, Move[]& m
 
         while (attack_bb) {
             Square dest = lsb(attack_bb);
-            MoveType mt = captures ? CAPTURE : QUIET;
+            MoveType mt = captures ? CAPTURE : NORMAL;
 
             ml[idx] = get_move(from, dest, mt);
             idx++;
@@ -66,11 +66,11 @@ template<bool captures, Piece pc> void add_moves(const Position & pos, Move[]& m
 /* Specialisation for pawn quiets. */
 /* (promotions, pawn pushing) */
 template<>
-void add_moves<false, PAWN>(const Position& pos, Move[]& ml, int& idx)
+void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
     std::uint64_t empty = ~(get_colour(pos, US) | get_colour(pos, THEM));
-    std::uint64_t them = get_colour(pos, THEM);
+    //std::uint64_t them = get_colour(pos, THEM); // Unused
     std::uint64_t singles, doubles;
 
     // Single push
@@ -80,9 +80,9 @@ void add_moves<false, PAWN>(const Position& pos, Move[]& ml, int& idx)
     singles &= ~rank_mask[RANK_8];
 
     while (singles) {
-        dest = lsb(singles);
+        Square dest = lsb(singles);
 
-        ml[idx] = get_move(dest - 8, dest, QUIET);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 8), dest, NORMAL);
         idx++;
 
         singles &= singles - 1;
@@ -93,30 +93,30 @@ void add_moves<false, PAWN>(const Position& pos, Move[]& ml, int& idx)
     doubles = (singles << 8) & empty;
 
     while (doubles) {
-        dest = lsb(doubles);
+        Square dest = lsb(doubles);
 
-        ml[idx] = get_move(dest - 16, dest, DOUBLE_PUSH);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 16), dest, DOUBLE_PUSH);
         idx++;
 
         doubles &= doubles - 1;
     }
 
     // Promotions
-    singles = ((pawns & Rank7Mask) << 8) & empty;
+    singles = ((pawns & rank_mask[RANK_7]) << 8) & empty;
 
     while (singles) {
-        dest = lsb(singles);
+        Square dest = lsb(singles);
 
-        ml[idx] = get_move(dest - 8, dest, PROMOTION, TO_KNIGHT);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 8), dest, PROMOTION, TO_KNIGHT);
         idx++;
 
-        ml[idx] = get_move(dest - 8, dest, PROMOTION, TO_BISHOP);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 8), dest, PROMOTION, TO_BISHOP);
         idx++;
 
-        ml[idx] = get_move(dest - 8, dest, PROMOTION, TO_ROOK);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 8), dest, PROMOTION, TO_ROOK);
         idx++;
 
-        ml[idx] = get_move(dest - 8, dest, PROMOTION, TO_QUEEN);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 8), dest, PROMOTION, TO_QUEEN);
         idx++;
 
         singles &= singles - 1;
@@ -127,22 +127,20 @@ void add_moves<false, PAWN>(const Position& pos, Move[]& ml, int& idx)
 
 /* Specialisation for pawn captures. */
 /* (en-passant, capture-promotions) */
-template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
+template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
 {
-    std::uint64_t pawns = get_piece(pos, pc, US);
-    std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
+    std::uint64_t pawns = get_piece(pos, PAWN, US);
+    std::uint64_t pieces = get_colour(pos, US) | get_colour(pos, THEM);
     std::uint64_t them = get_colour(pos, THEM);
     std::uint64_t dest_bb;
-
-    pawns = b->pawns() & b->colors[WHITE];
 
     // Left captures
     dest_bb = ((pawns & ~file_mask[FILE_A]) << 7) & them & ~rank_mask[RANK_8];
 
     while (dest_bb) {
-        dest = lsb(dest_bb);
+        Square dest = lsb(dest_bb);
 
-        ml[idx] = get_move(dest - 7, dest, CAPTURE);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 7), dest, CAPTURE);
         idx++;
 
         dest_bb &= dest_bb - 1;
@@ -152,18 +150,18 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
     dest_bb = ((pawns & ~file_mask[FILE_A]) << 7) & them & rank_mask[RANK_8];
 
     while (dest_bb) {
-        dest = lsb(dest_bb);
+        Square dest = lsb(dest_bb);
 
-        ml[idx] = get_move(dest - 7, dest, PROM_CAPTURE, TO_KNIGHT);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 7), dest, PROM_CAPTURE, TO_KNIGHT);
         idx++;
 
-        ml[idx] = get_move(dest - 7, dest, PROM_CAPTURE, TO_BISHOP);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 7), dest, PROM_CAPTURE, TO_BISHOP);
         idx++;
 
-        ml[idx] = get_move(dest - 7, dest, PROM_CAPTURE, TO_ROOK);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 7), dest, PROM_CAPTURE, TO_ROOK);
         idx++;
 
-        ml[idx] = get_move(dest - 7, dest, PROM_CAPTURE, TO_QUEEN);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 7), dest, PROM_CAPTURE, TO_QUEEN);
         idx++;
 
         dest_bb &= dest_bb - 1;
@@ -173,9 +171,9 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
     dest_bb = ((pawns & ~file_mask[FILE_H]) << 9) & them & ~rank_mask[RANK_8];
 
     while (dest_bb) {
-        dest = lsb(dest_bb);
+        Square dest = lsb(dest_bb);
 
-        ml[idx] = get_move(dest - 9, dest, CAPTURE);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 9), dest, CAPTURE);
         idx++;
 
         dest_bb &= dest_bb - 1;
@@ -185,18 +183,18 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
     dest_bb = ((pawns & ~file_mask[FILE_H]) << 9) & them & ~rank_mask[RANK_8];
 
     while (dest_bb) {
-        dest = lsb(dest_bb);
+        Square dest = lsb(dest_bb);
 
-        ml[idx] = get_move(dest - 9, dest, PROM_CAPTURE, TO_KNIGHT);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 9), dest, PROM_CAPTURE, TO_KNIGHT);
         idx++;
 
-        ml[idx] = get_move(dest - 9, dest, PROM_CAPTURE, TO_BISHOP);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 9), dest, PROM_CAPTURE, TO_BISHOP);
         idx++;
 
-        ml[idx] = get_move(dest - 9, dest, PROM_CAPTURE, TO_ROOK);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 9), dest, PROM_CAPTURE, TO_ROOK);
         idx++;
 
-        ml[idx] = get_move(dest - 9, dest, PROM_CAPTURE, TO_QUEEN);
+        ml[idx] = get_move(Square((unsigned char)(dest) - 9), dest, PROM_CAPTURE, TO_QUEEN);
         idx++;
 
         dest_bb &= dest_bb - 1;
@@ -210,7 +208,7 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
         dest_bb |= (pieces >> 9) & ~file_mask[FILE_H] * get_piece(pos, PAWN, THEM);
 
         while (dest_bb) {
-            from = lsb(dest_bb);
+            Square from = lsb(dest_bb);
 
             ml[idx] = get_move(from, pos.epsq, ENPASSANT);
             idx++;
@@ -225,7 +223,7 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move[]& ml, int& idx)
 /* Specialisation for king quiets. */
 /* (Castling, plus an end to the recursion) */
 template<>
-void add_moves<false, KING>(const Position& pos, Move[]& ml, int& idx)
+void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, KING, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
@@ -238,7 +236,7 @@ void add_moves<false, KING>(const Position& pos, Move[]& ml, int& idx)
 
     while (attack_bb) {
         Square dest = lsb(attack_bb);
-        MoveType mt = QUIET;
+        MoveType mt = NORMAL;
 
         ml[idx] = get_move(from, dest, mt);
         idx++;
@@ -254,7 +252,7 @@ void add_moves<false, KING>(const Position& pos, Move[]& ml, int& idx)
 /* Specialisation for king captures. */
 /* Maybe worth checking for illegal moves? */
 template<>
-void add_moves<true, KING>(const Position& pos, Move[]& ml, int& idx)
+void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, KING, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
@@ -267,7 +265,7 @@ void add_moves<true, KING>(const Position& pos, Move[]& ml, int& idx)
 
     while (attack_bb) {
         Square dest = lsb(attack_bb);
-        MoveType mt = QUIET;
+        MoveType mt = NORMAL;
 
         ml[idx] = get_move(from, dest, mt);
         idx++;
