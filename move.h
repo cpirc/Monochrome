@@ -82,7 +82,7 @@ inline Square to_square(const Move move)
 /* Get move type from move */
 inline MoveType move_type(const Move move)
 {
-    return MoveType((move & MOVE_TYPE_MASK) >> MOVE_TYPE_SHIFT);
+    return MoveType(move & MOVE_TYPE_MASK);
 }
 
 /* Get promotion type from move */
@@ -94,7 +94,7 @@ inline Piece promotion_type(const Move move)
 /* Get move by encoding it's components together */
 inline Move get_move(Square from, Square to, MoveType move_type, PromotionType prom_type = NONE)
 {
-    return Move(from | (to << TO_SQ_SHIFT) | (move_type << MOVE_TYPE_SHIFT) | (prom_type << PROM_TYPE_SHIFT));
+    return Move(from | (to << TO_SQ_SHIFT) | move_type | prom_type);
 }
 
 extern void make_move(Position& pos, const Move move);

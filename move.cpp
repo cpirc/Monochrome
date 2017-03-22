@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "types.h"
 #include "move.h"
 #include "position.h"
-#include "types.h"
+#include "bitboard.h"
 
 void make_move(Position& pos, const Move move)
 {
@@ -88,4 +89,6 @@ void make_move(Position& pos, const Move move)
     default:
         break;
     }
+
+    flip_position(pos);
 }

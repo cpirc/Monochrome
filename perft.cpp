@@ -25,6 +25,7 @@
 #include <cinttypes>
 
 #include "position.h"
+#include "bitboard.h"
 #include "move.h"
 
 std::uint64_t perft(const Position& pos, int depth)
@@ -44,6 +45,8 @@ std::uint64_t perft(const Position& pos, int depth)
         Position npos = pos;
 
         make_move(npos, ml[i]);
+        if (is_checked(npos, THEM))
+            continue;
 
         nodes += perft(npos, depth - 1);
     }

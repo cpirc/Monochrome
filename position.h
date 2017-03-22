@@ -26,6 +26,7 @@ SOFTWARE.
 #define POSITION_H
 
 #include "types.h"
+#include "bitboard.h"
 #include "tt.h"
 
 /* A chess position. */
@@ -152,6 +153,43 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
     pos.pieces[piece]     ^= from_bit;
     pos.colours[colour]   ^= from_bit;
     pos.hash_key          ^= piece_sq_keys[colour][piece][from];
+}
+
+/* Get any piece attacks to a square. */
+template<Piece p = PAWN>
+inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ);
+}
+
+/* Finish above template. */
+template<>
+inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
+{
+    return attacks<KING>(sq, occ) & get_piece(pos, KING);
+}
+
+/* Checks to see if c is in check */
+inline bool is_checked(const Position& pos, const Colour c)
+{
+    return (attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos)) & pos.colours[!c]) > std::uint64_t(0);
+}
+
+/* Flips the position */
+inline void flip_position(Position& pos)
+{
+    std::uint64_t* curr;
+    for (curr = pos.pieces; curr < pos.pieces + 6; ++curr)
+        *curr = __builtin_bswap64(*curr);
+    std::uint64_t tmp = pos.colours[1];
+    pos.colours[1] = pos.colours[0];
+    pos.colours[0] = tmp;
+    for (curr = pos.colours; curr < pos.colours + 2; ++curr)
+        *curr = __builtin_bswap64(*curr);
+    if (pos.epsq != INVALID_SQUARE)
+        pos.epsq = Square(int(pos.epsq) ^ 56);
+    // Need to add castling permissions
+    pos.flipped = !pos.flipped;
 }
 
 extern std::uint64_t perft(const Position& pos, int depth);

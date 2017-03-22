@@ -28,8 +28,15 @@ SOFTWARE.
 #include <cinttypes>
 
 #include "magic_moves.h"
-#include "position.h"
 #include "types.h"
+
+#define PRINT_BITBOARD(x) \
+    for (int i = 0; i < 64; i++) { \
+        printf("%d ", (((x) >> (i^56)) & 1) ? 1 : 0); \
+        if (!((i + 1) % 8)) \
+            putchar('\n'); \
+    } \
+    putchar('\n');
 
 /* Bitboard masks for ranks on a chessboard. */
 static const std::uint64_t rank_mask[8] = {
@@ -116,25 +123,6 @@ template<>
 inline std::uint64_t attacks<KING>(const Square sq, const std::uint64_t)
 {
     return king_mask[sq];
-}
-
-/* Get any piece attacks to a square. */
-template<Piece p = PAWN>
-inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ)
-{
-    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ);
-}
-
-/* Finish above template. */
-template<>
-inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
-{
-    return attacks<KING>(sq, occ) & get_piece(pos, KING);
-}
-
-inline bool is_checked(const Position& pos, const Colour c)
-{
-    return attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos)) > std::uint64_t(0);
 }
 
 extern void init_bitboards();

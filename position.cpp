@@ -27,6 +27,7 @@ SOFTWARE.
 #include <cstring>
 
 #include "types.h"
+#include "bitboard.h"
 #include "position.h"
 
 /* The zobrist keys used to hash the position */
@@ -51,13 +52,6 @@ void initialize_keys()
     }
 }
 
-#define PRINT_BITBOARD(x) \
-    for (int i = 0; i < 64; i++) { \
-        printf("%d ", (((x) >> i) & 1) ? 1 : 0); \
-        if (!((i + 1) % 8)) \
-            putchar('\n'); \
-    } \
-    putchar('\n');
 
 #define ARR_LEN(x) (sizeof(x) / sizeof(x[0]))
 
@@ -74,6 +68,7 @@ static const unsigned char fen_board[] = {
 
 void parse_fen_to_position(const char *fen_str, Position &pos)
 {
+    printf("Converting %s\n", fen_str);
     std::size_t i = 0, square_idx = 0;
     char c;
 
@@ -146,7 +141,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     }
 
     c = fen_str[++i];
-    pos.flipped = (c == 'w') ? false : true;
+    bool flip = c == 'b';
 
     i+=2;
     pos.castle = 0;
@@ -189,6 +184,10 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     } else {
         pos.fifty = fen_str[i] - '0';
     }
+
+    pos.flipped = flip;
+    if (flip)
+        flip_position(pos);
 }
 
 void print_position_struct(const Position &pos)
@@ -202,13 +201,13 @@ void print_position_struct(const Position &pos)
         PRINT_BITBOARD(pos.pieces[p]);
     }
 
-    printf("Positions of black pieces:\n");
+    printf("Positions of our pieces:\n");
     PRINT_BITBOARD(pos.colours[US]);
 
-    printf("Positions of white pieces:\n");
+    printf("Positions of their pieces:\n");
     PRINT_BITBOARD(pos.colours[THEM]);
 
-    printf("Side to move is: %s\n\n", (pos.flipped == true) ? "black" : "white");
+    printf("Side to move is: %s\n\n", (pos.flipped == true) ? "THEM" : "US");
 
     if ((pos.castle & (1 << 3)))
         printf("White king can castle kingside\n");
