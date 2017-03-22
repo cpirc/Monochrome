@@ -72,7 +72,6 @@ static const unsigned char fen_board[] = {
     A1, B1, C1, D1, E1, F1, G1, H1
 };
 
-
 void parse_fen_to_position(const char *fen_str, Position &pos)
 {
     std::size_t i = 0, square_idx = 0;
@@ -156,16 +155,16 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
 
         switch (c) {
         case 'K':
-            pos.castle |= 1 << 3;
+            pos.castle |= US_OO;
             break;
         case 'Q':
-            pos.castle |= 1 << 2;
+            pos.castle |= US_OOO;
             break;
         case 'k':
-            pos.castle |= 1 << 1;
+            pos.castle |= THEM_OO;
             break;
         case 'q':
-            pos.castle |= 1 << 0;
+            pos.castle |= THEM_OOO;
             break;
         case '-':
             c = fen_str[i++];

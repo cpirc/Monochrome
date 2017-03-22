@@ -63,4 +63,12 @@ enum File : unsigned char {
     FILE_E, FILE_F, FILE_G, FILE_H
 };
 
+/* Castling rights. */
+enum {
+    US_OO    = 1 << 3,
+    US_OOO   = 1 << 2,
+    THEM_OO  = 1 << 1,
+    THEM_OOO = 1 << 0
+};
+
 #endif
