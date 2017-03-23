@@ -22,10 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <cinttypes>
+
 #include "bitboard.h"
 #include "move.h"
 #include "position.h"
 #include "types.h"
+
+/* Castling occupancy masks. */
+static const std::uint64_t oo_castle_mask = (1ULL << F1) | (1ULL << G1);
+static const std::uint64_t ooo_castle_mask = (1ULL << D1) | (1ULL << C1) | (1ULL << B1);
 
 /* Generic move serialisation loop. */
 template<bool captures, Piece pc = PAWN>
@@ -228,7 +234,21 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
         attack_bb &= attack_bb - 1;
     }
 
-    // Castling to be done later.
+    if (pos.castling & US_OO && !(occ & oo_castle_mask) &&
+        !(attacks_to<>(pos, F1, occ, THEM) & get_colour(pos, THEM))&&
+        !(attacks_to<>(pos, G1, occ, THEM) & get_colour(pos, THEM))) {
+
+        ml[idx] = get_move(E1, G1, CASTLE);
+        idx++;
+    }
+
+    if (pos.castling & US_OOO && !(occ & ooo_castle_mask) &&
+        !(attacks_to<>(pos, D1, occ, THEM) & get_colour(pos, THEM))&&
+        !(attacks_to<>(pos, C1, occ, THEM) & get_colour(pos, THEM))) {
+
+        ml[idx] = get_move(E1, C1, CASTLE);
+        idx++;
+    }
 
     // No tail call to end template recursion.
 }
