@@ -43,7 +43,6 @@ std::uint64_t perft(const Position& pos, int depth)
     for (i = 0; i < movecount; i++) {
 
         Position npos = pos;
-        Move m = ml[i];
 
         make_move(npos, ml[i]);
         if (is_checked(npos, THEM))
@@ -61,9 +60,9 @@ void run_perft_tests()
 
     Position pos;
 
-    parse_fen_to_position((const char*)"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", pos);
+    parse_fen_to_position((const char*)"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", pos);
 
     for (i = 1; i < 7; i++) {
-        std::printf("Perft(%d) = %llu\n", i, perft(pos, i));
+        std::printf("Perft(%d) = %" PRIu64 "\n", i, perft(pos, i));
     }
 }

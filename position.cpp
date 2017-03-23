@@ -141,7 +141,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     }
 
     c = fen_str[++i];
-    bool flip = c == 'b';
+    pos.flipped = c == 'b';
 
     i+=2;
     pos.castle = 0;
@@ -185,8 +185,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
         pos.fifty = fen_str[i] - '0';
     }
 
-    pos.flipped = flip;
-    if (flip)
+    if (pos.flipped)
         flip_position(pos);
 }
 

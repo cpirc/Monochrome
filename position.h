@@ -185,17 +185,30 @@ inline bool is_checked(const Position& pos, const Colour c)
 /* Flips the position */
 inline void flip_position(Position& pos)
 {
+    // Flip piece bitboards
     std::uint64_t* curr;
     for (curr = pos.pieces; curr < pos.pieces + 6; ++curr)
         *curr = __builtin_bswap64(*curr);
     std::uint64_t tmp = pos.colours[1];
+
+    // Reverse colour bitboards
     pos.colours[1] = pos.colours[0];
     pos.colours[0] = tmp;
+
+    // Flip colour bitboards
     for (curr = pos.colours; curr < pos.colours + 2; ++curr)
         *curr = __builtin_bswap64(*curr);
+
+    // Flip epsq
     if (pos.epsq != INVALID_SQUARE)
         pos.epsq = Square(int(pos.epsq) ^ 56);
-    // Need to add castling permissions
+
+    // Flip castling rights
+    std::uint8_t tmp2 = (pos.castle & 3) << 2;
+    pos.castle >>= 2;
+    pos.castle ^= tmp2;
+
+    // Flip flipped
     pos.flipped = !pos.flipped;
 }
 

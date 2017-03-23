@@ -65,10 +65,10 @@ enum File : unsigned char {
 
 /* Castling rights. */
 enum {
-    US_OO    = 1 << 3,
-    US_OOO   = 1 << 2,
-    THEM_OO  = 1 << 1,
-    THEM_OOO = 1 << 0
+    US_OO    = 1,
+    US_OOO   = 2,
+    THEM_OO  = 4,
+    THEM_OOO = 8
 };
 
 #define ENABLE_OPERATIONS(T)                                                   \
