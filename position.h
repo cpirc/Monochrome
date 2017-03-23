@@ -157,14 +157,20 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
 
 /* Get any piece attacks to a square. */
 template<Piece p = PAWN>
-inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ)
+inline std::uint64_t attacks_to(const Position& pos, const Square sq, const std::uint64_t occ, const Colour by)
 {
-    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ);
+    return (attacks<p>(sq, occ) & get_piece(pos, p)) | attacks_to<p+1>(pos, sq, occ, by);
+}
+
+template<>
+inline std::uint64_t attacks_to<PAWN>(const Position& pos, const Square sq, const std::uint64_t occ, const Colour by)
+{
+    return (pawn_attacks(sq, by) & get_piece(pos, PAWN)) | attacks_to<KNIGHT>(pos, sq, occ, by);
 }
 
 /* Finish above template. */
 template<>
-inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ)
+inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ, const Colour)
 {
     return attacks<KING>(sq, occ) & get_piece(pos, KING);
 }
@@ -172,7 +178,8 @@ inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, cons
 /* Checks to see if c is in check */
 inline bool is_checked(const Position& pos, const Colour c)
 {
-    return (attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos)) & pos.colours[!c]) > std::uint64_t(0);
+    Colour by = (c == US ? THEM : US);
+    return (attacks_to(pos, lsb(get_piece(pos, KING, c)), get_occupancy(pos), c) & get_colour(pos, by)) > std::uint64_t(0);
 }
 
 /* Flips the position */

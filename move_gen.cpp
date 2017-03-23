@@ -32,7 +32,7 @@ template<bool captures, Piece pc = PAWN>
 void add_moves(const Position & pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, pc, US);
-    std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
+    std::uint64_t occ = get_occupancy(pos);
     std::uint64_t capturemask = (captures) ? get_colour(pos, THEM) : ~occ;
     MoveType mt = captures ? CAPTURE : NORMAL;
 
@@ -62,7 +62,7 @@ template<>
 void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
-    std::uint64_t empty = ~(get_colour(pos, US) | get_colour(pos, THEM));
+    std::uint64_t empty = ~get_occupancy(pos);
     std::uint64_t singles, doubles;
 
     // Single push
@@ -240,11 +240,10 @@ void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
 {
     std::uint64_t pieces = get_piece(pos, KING, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
-    std::uint64_t them = get_colour(pos, THEM);
 
     Square from = lsb(pieces);
 
-    std::uint64_t attack_bb = attacks<KING>(from, occ) & them;
+    std::uint64_t attack_bb = attacks<KING>(from, occ) & get_colour(pos, THEM);
 
     while (attack_bb) {
         Square dest = lsb(attack_bb);
