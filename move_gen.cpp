@@ -234,7 +234,7 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
         attack_bb &= attack_bb - 1;
     }
 
-    if (pos.castling & US_OO && !(occ & oo_castle_mask) &&
+    if (pos.castle & US_OO && !(occ & oo_castle_mask) &&
         !(attacks_to<>(pos, F1, occ, THEM) & get_colour(pos, THEM))&&
         !(attacks_to<>(pos, G1, occ, THEM) & get_colour(pos, THEM))) {
 
@@ -242,7 +242,7 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
         idx++;
     }
 
-    if (pos.castling & US_OOO && !(occ & ooo_castle_mask) &&
+    if (pos.castle & US_OOO && !(occ & ooo_castle_mask) &&
         !(attacks_to<>(pos, D1, occ, THEM) & get_colour(pos, THEM))&&
         !(attacks_to<>(pos, C1, occ, THEM) & get_colour(pos, THEM))) {
 
