@@ -141,7 +141,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     }
 
     c = fen_str[++i];
-    pos.flipped = c == 'b';
+    bool flipped = c == 'b';
 
     i+=2;
     pos.castle = 0;
@@ -185,7 +185,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
         pos.fifty = fen_str[i] - '0';
     }
 
-    if (pos.flipped)
+    if (flipped)
         flip_position(pos);
 }
 
@@ -206,7 +206,7 @@ void print_position_struct(const Position &pos)
     printf("Positions of their pieces:\n");
     PRINT_BITBOARD(pos.colours[THEM]);
 
-    printf("Side to move is: %s\n\n", (pos.flipped == true) ? "THEM" : "US");
+    //printf("Side to move is: %s\n\n", (pos.flipped == true) ? "THEM" : "US");
 
     if ((pos.castle & (1 << 3)))
         printf("White king can castle kingside\n");

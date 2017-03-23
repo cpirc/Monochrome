@@ -60,7 +60,7 @@ void run_perft_tests()
 
     Position pos;
 
-    parse_fen_to_position((const char*)"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", pos);
+    parse_fen_to_position((const char*)"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", pos);
 
     for (i = 1; i < 7; i++) {
         std::printf("Perft(%d) = %" PRIu64 "\n", i, perft(pos, i));

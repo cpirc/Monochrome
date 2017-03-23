@@ -219,7 +219,7 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
 template<>
 void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
 {
-    std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
+    std::uint64_t occ = get_occupancy(pos);
 
     Square from = lsb(get_piece(pos, KING, US));
 
@@ -234,20 +234,22 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
         attack_bb &= attack_bb - 1;
     }
 
-    if (pos.castle & US_OO && !(occ & oo_castle_mask) &&
-        !(attacks_to<>(pos, F1, occ, THEM) & get_colour(pos, THEM))&&
-        !(attacks_to<>(pos, G1, occ, THEM) & get_colour(pos, THEM))) {
+    if (!is_checked(pos, US)) {
+        if (pos.castle & US_OO && !(occ & oo_castle_mask) &&
+            !(attacks_to<>(pos, F1, occ, US) & get_colour(pos, THEM))&&
+            !(attacks_to<>(pos, G1, occ, US) & get_colour(pos, THEM))) {
 
-        ml[idx] = get_move(E1, G1, CASTLE);
-        idx++;
-    }
+            ml[idx] = get_move(E1, G1, CASTLE);
+            idx++;
+        }
 
-    if (pos.castle & US_OOO && !(occ & ooo_castle_mask) &&
-        !(attacks_to<>(pos, D1, occ, THEM) & get_colour(pos, THEM))&&
-        !(attacks_to<>(pos, C1, occ, THEM) & get_colour(pos, THEM))) {
+        if (pos.castle & US_OOO && !(occ & ooo_castle_mask) &&
+            !(attacks_to<>(pos, D1, occ, US) & get_colour(pos, THEM))&&
+            !(attacks_to<>(pos, C1, occ, US) & get_colour(pos, THEM))) {
 
-        ml[idx] = get_move(E1, C1, CASTLE);
-        idx++;
+            ml[idx] = get_move(E1, C1, CASTLE);
+            idx++;
+        }
     }
 
     // No tail call to end template recursion.

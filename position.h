@@ -33,7 +33,6 @@ SOFTWARE.
 struct Position {
     std::uint64_t pieces[6];  // Bitboards containing piece locations.
     std::uint64_t colours[2]; // Bitboards containing colours of pieces.
-    bool flipped;             // Side to move.
     std::uint8_t castle;      // Castling rights.
     Square epsq;              // En passant square.
     char fifty;               // Fifty-move rule counter.
@@ -207,9 +206,6 @@ inline void flip_position(Position& pos)
     std::uint8_t tmp2 = (pos.castle & 3) << 2;
     pos.castle >>= 2;
     pos.castle ^= tmp2;
-
-    // Flip flipped
-    pos.flipped = !pos.flipped;
 }
 
 extern std::uint64_t perft(const Position& pos, int depth);
