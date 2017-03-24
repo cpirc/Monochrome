@@ -36,10 +36,11 @@ int main()
 {
     std::printf("Hello World!\n");
 
-    init_bitboards();
+    run_move_to_lan_tests();
+    //init_bitboards();
 
     //run_fen_parser_tests();
-    run_perft_tests();
+    //run_perft_tests();
 
     return 0;
 }

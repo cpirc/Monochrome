@@ -92,3 +92,64 @@ void make_move(Position& pos, const Move move)
 
     flip_position(pos);
 }
+
+
+static const char *square_str[] = {
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
+};
+
+void move_to_lan(char* lan_str, const Move move)
+{
+    Square from = from_square(move),
+             to = to_square(move);
+
+    lan_str[0] = square_str[(std::size_t)from][0];
+    lan_str[1] = square_str[(std::size_t)from][1];
+
+    lan_str[2] = square_str[(std::size_t)to][0];
+    lan_str[3] = square_str[(std::size_t)to][1];
+
+    if (move_type(move) == PROMOTION) {
+        switch (promotion_type(move)) {
+        case KNIGHT:
+            lan_str[4] = 'n';
+            break;
+        case BISHOP:
+            lan_str[4] = 'b';
+            break;
+        case ROOK:
+            lan_str[4] = 'r';
+            break;
+        case QUEEN:
+            lan_str[4] = 'q';
+            break;
+        default:
+            break;
+        }
+        lan_str[5] = '\0';
+    } else
+        lan_str[4] = '\0';
+}
+
+void run_move_to_lan_tests(void)
+{
+    char str[6];
+
+    move_to_lan(str, get_move(H2, H1, PROMOTION, TO_ROOK));
+    printf("%s\n", str);
+    move_to_lan(str, get_move(A5, C7, NORMAL));
+    printf("%s\n", str);
+    move_to_lan(str, get_move(G7, G8, PROMOTION, TO_BISHOP));
+    printf("%s\n", str);
+    move_to_lan(str, get_move(E7, E8, PROMOTION, TO_QUEEN));
+    printf("%s\n", str);
+    move_to_lan(str, get_move(F2, F1, PROMOTION, TO_KNIGHT));
+    printf("%s\n", str);
+}
