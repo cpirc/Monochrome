@@ -74,55 +74,41 @@ inline Square lsb(std::uint64_t bb)
     return Square(__builtin_ctzll(bb));
 }
 
-/* Get attacks for a piece. */
-template<Piece p>
-std::uint64_t attacks(const Square sq, const std::uint64_t occ);
-
-/* Get pawn attacks. */
-template<>
-inline std::uint64_t attacks<PAWN>(const Square sq, const std::uint64_t)
+/* Get number of set bits. */
+inline int popcnt(std::uint64_t bb)
 {
-    return pawn_mask[US][sq];
+    assert(bb);
+    return __builtin_popcountll(bb);
 }
 
+/* Get attacks for a piece. */
+template<Piece p>
+std::uint64_t attacks(const Square sq, const std::uint64_t occ)
+{
+    static_assert(p != NO_PIECE, "attacks() called with NO_PIECE as parameter");
+
+    switch (p) {
+    case PAWN:
+        return pawn_mask[US][sq];
+    case KNIGHT:
+        return knight_mask[sq];
+    case BISHOP:
+        return Bmagic(sq, occ);
+    case ROOK:
+        return Rmagic(sq, occ);
+    case QUEEN:
+        return Bmagic(sq, occ) | Rmagic(sq, occ);
+    case KING:
+        return king_mask[sq];
+    case NO_PIECE:
+        return 0;
+    }
+}
+
+/* Get side-dependent pawn attacks. */
 inline std::uint64_t pawn_attacks(const Square sq, const Colour c)
 {
     return pawn_mask[c][sq];
-}
-
-/* Get knight attacks. */
-template<>
-inline std::uint64_t attacks<KNIGHT>(const Square sq, const std::uint64_t)
-{
-    return knight_mask[sq];
-}
-
-/* Get bishop attacks. */
-template<>
-inline std::uint64_t attacks<BISHOP>(const Square sq, const std::uint64_t occ)
-{
-    return Bmagic(sq, occ);
-}
-
-/* Get rook attacks. */
-template<>
-inline std::uint64_t attacks<ROOK>(const Square sq, const std::uint64_t occ)
-{
-    return Rmagic(sq, occ);
-}
-
-/* Get queen attacks. */
-template<>
-inline std::uint64_t attacks<QUEEN>(const Square sq, const std::uint64_t occ)
-{
-    return Bmagic(sq, occ) | Rmagic(sq, occ);
-}
-
-/* Get king attacks. */
-template<>
-inline std::uint64_t attacks<KING>(const Square sq, const std::uint64_t)
-{
-    return king_mask[sq];
 }
 
 extern void init_bitboards();

@@ -99,6 +99,7 @@ inline Move get_move(Square from, Square to, MoveType move_type, PromotionType p
 
 extern void make_move(Position& pos, const Move move);
 extern int generate(const Position& pos, Move* ml);
+extern int generate_captures(const Position& pos, Move* ml);
 
 extern void move_to_lan(char* lan_str, const Move move);
 extern void run_move_to_lan_tests(void);
