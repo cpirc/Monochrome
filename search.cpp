@@ -27,7 +27,7 @@ SOFTWARE.
 #include "position.h"
 
 /* Alpha-Beta search a position to return a score. */
-int search(const Position& pos, int depth, int alpha, int beta)
+int search(Position& pos, int depth, int alpha, int beta)
 {
     Position npos;
     Move ml[256];

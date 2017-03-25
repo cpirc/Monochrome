@@ -27,6 +27,6 @@ SOFTWARE.
 
 #include "position.h"
 
-extern int search(const Position& pos, int depth, int alpha, int beta);
+extern int search(Position& pos, int depth, int alpha, int beta);
 
 #endif
