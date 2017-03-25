@@ -26,6 +26,46 @@ SOFTWARE.
 #include "move.h"
 #include "position.h"
 
+int quies(Position& pos, int alpha, int beta)
+{
+    Position npos;
+    Move ml[256];
+    int movecount, i, value;
+
+    /* Stand pat. */
+    value = evaluate(pos);
+
+    if (value >= beta) {
+        return beta;
+    }
+    if (value > alpha) {
+        alpha = value;
+    }
+
+    movecount = generate_captures(pos, ml);
+
+    for (i = 0; i < movecount; i++) {
+
+        npos = pos;
+
+        make_move(npos, ml[i]);
+        if (is_checked(npos, THEM)) {
+            continue;
+        }
+
+        value = -quies(npos, -beta, -alpha);
+
+        if (value >= beta) {
+            return beta;
+        }
+        if (value > alpha) {
+            alpha = value;
+        }
+    }
+
+    return alpha;
+}
+
 /* Alpha-Beta search a position to return a score. */
 int search(Position& pos, int depth, int alpha, int beta)
 {
@@ -34,20 +74,10 @@ int search(Position& pos, int depth, int alpha, int beta)
     int movecount, i, value;
 
     if (depth <= 0) {
-        /* Stand pat. */
-        value = evaluate(pos);
-
-        if (value >= beta) {
-            return beta;
-        }
-        if (value > alpha) {
-            alpha = value;
-        }
-
-        movecount = generate_captures(pos, ml);
-    } else {
-        movecount = generate(pos, ml);
+        return quies(pos, alpha, beta);
     }
+
+    movecount = generate(pos, ml);
 
     for (i = 0; i < movecount; i++) {
 
