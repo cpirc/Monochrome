@@ -33,11 +33,21 @@ int search(Position& pos, int depth, int alpha, int beta)
     Move ml[256];
     int movecount, i, value;
 
-    if (depth == 0) {
-        return evaluate(pos);
-    }
+    if (depth <= 0) {
+        /* Stand pat. */
+        value = evaluate(pos);
 
-    movecount = generate(pos, ml);
+        if (value >= beta) {
+            return beta;
+        }
+        if (value > alpha) {
+            alpha = value;
+        }
+
+        movecount = generate_captures(pos, ml);
+    } else {
+        movecount = generate(pos, ml);
+    }
 
     for (i = 0; i < movecount; i++) {
 

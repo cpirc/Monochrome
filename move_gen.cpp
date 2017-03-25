@@ -289,3 +289,13 @@ int generate(const Position& pos, Move* ml)
 
     return idx;
 }
+
+/* Generate captures for a position. */
+int generate_captures(const Position& pos, Move* ml)
+{
+    int idx = 0;
+
+    add_moves<true>(pos, ml, idx);
+
+    return idx;
+}
