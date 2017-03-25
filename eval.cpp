@@ -39,14 +39,8 @@ template<Piece p = PAWN>
 int evaluate_material(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
-    int score = 0;
 
-    while (pieces) {
-        score += piecevals[p];
-        pieces &= pieces - 1;
-    }
-
-    return score + evaluate_material<p+1>(pos);
+    return (popcnt(pieces) * piecevals[p]) + evaluate_material<p+1>(pos);
 }
 
 /* Return material balance of a board. */
@@ -55,14 +49,8 @@ template<>
 int evaluate_material<QUEEN>(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, QUEEN, US);
-    int score = 0;
 
-    while (pieces) {
-        score += piecevals[QUEEN];
-        pieces &= pieces - 1;
-    }
-
-    return score;
+    return popcnt(pieces) * piecevals[QUEEN];
 }
 
 /* Return the heuristic value of a position. */

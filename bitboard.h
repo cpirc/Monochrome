@@ -74,6 +74,13 @@ inline Square lsb(std::uint64_t bb)
     return Square(__builtin_ctzll(bb));
 }
 
+/* Get number of set bits. */
+inline int popcnt(std::uint64_t bb)
+{
+    assert(bb);
+    return __builtin_popcountll(bb);
+}
+
 /* Get attacks for a piece. */
 template<Piece p>
 std::uint64_t attacks(const Square sq, const std::uint64_t occ);
