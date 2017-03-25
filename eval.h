@@ -27,6 +27,6 @@ SOFTWARE.
 
 #include "position.h"
 
-extern int evaluate(const Position& pos);
+extern int evaluate(Position& pos);
 
 #endif
