@@ -260,10 +260,9 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
 template<>
 void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
 {
-    std::uint64_t pieces = get_piece(pos, KING, US);
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
 
-    Square from = lsb(pieces);
+    Square from = lsb(get_piece(pos, KING, US));
 
     std::uint64_t attack_bb = attacks<KING>(from, occ) & get_colour(pos, THEM);
 

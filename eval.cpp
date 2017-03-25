@@ -56,6 +56,6 @@ int evaluate(Position& pos)
         flip_position(pos);
     }
 
-    return score;
+    return pos.flipped ? -score : score;
 }
 

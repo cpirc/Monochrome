@@ -26,13 +26,26 @@ SOFTWARE.
 #include "move.h"
 #include "position.h"
 
-/* Alpha-Beta search a position to return a score. */
-int search(Position& pos, int depth, int alpha, int beta)
-{
-    Position npos;
+#define MAX_PLY (64)
+#define INF     (30000)
+
+/* A data structure to pass local parameters thru */
+struct SearchStack {
+    std::uint8_t ply;
     Move ml[256];
+};
+
+/* Alpha-Beta search a position to return a score. */
+int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
+{
+    if (ss->ply >= MAX_PLY) {
+        return evaluate(pos);
+    }
+
+    Move* ml = ss->ml;
     int movecount, i, value;
     const bool quies = depth <= 0;
+    const bool in_check = is_checked(pos, US);
 
     if (quies) {
         /* Stand pat. */
@@ -50,24 +63,64 @@ int search(Position& pos, int depth, int alpha, int beta)
         movecount = generate(pos, ml);
     }
 
+    int legal_moves = 0;
+    Move best_move = 0;
+
     for (i = 0; i < movecount; i++) {
 
-        npos = pos;
+        Position npos = pos;
 
         make_move(npos, ml[i]);
         if (is_checked(npos, THEM)) {
             continue;
         }
 
-        value = -search(npos, depth - 1, -beta, -alpha);
+        ++legal_moves;
+
+        value = -search(npos, depth - 1, -beta, -alpha, ss + 1);
 
         if (value >= beta) {
             return beta;
         }
         if (value > alpha) {
             alpha = value;
+            best_move = ml[i];
         }
     }
 
+    if (!legal_moves) {
+        if (in_check)
+            return -INF + ss->ply;
+        else
+            return 0;
+    }
+
+    if (!ss->ply) {
+        char mstr[6];
+        move_to_lan(mstr, best_move);
+        printf("best move: %s\n", mstr);
+    }
+
     return alpha;
+}
+
+/* Reset the search stack to default values */
+void clear_ss(SearchStack* ss, int size)
+{
+    for (std::uint8_t i = 0; i < size; ++i, ++ss) {
+        ss->ply = i;
+    }
+}
+
+/* Start searching a position and return the best move */
+Move start_search(Position& pos)
+{
+    SearchStack ss[MAX_PLY];
+    clear_ss(ss, MAX_PLY);
+    for (int depth = 1; depth < MAX_PLY; ++depth) {
+        int score = search(pos, depth, -INF, +INF, ss);
+        printf("depth %d, score %d\n", depth, score);
+    }
+    Move move = 0;
+    return move;
 }

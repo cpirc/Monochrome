@@ -30,15 +30,19 @@ SOFTWARE.
 #include "types.h"
 #include "misc.h"
 #include "tt.h"
+#include "search.h"
 
 /* The start of all things (after _start) */
 int main()
 {
     std::printf("Hello World!\n");
+    init_bitboards();
 
-    run_move_to_lan_tests();
-    //init_bitboards();
+    Position pos;
+    parse_fen_to_position("3q3k/1Q4R1/2pNB2p/2Pp3n/8/6P1/3r2r1/7K b - - 3 38", pos);
+    start_search(pos);
 
+    //run_move_to_lan_tests();
     //run_fen_parser_tests();
     //run_perft_tests();
 

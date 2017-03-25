@@ -185,6 +185,7 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
         pos.fifty = fen_str[i] - '0';
     }
 
+    pos.flipped = false;
     if (flipped)
         flip_position(pos);
 }

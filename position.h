@@ -34,6 +34,7 @@ struct Position {
     std::uint64_t pieces[6];  // Bitboards containing piece locations.
     std::uint64_t colours[2]; // Bitboards containing colours of pieces.
     std::uint8_t castle;      // Castling rights.
+    bool flipped;             // Has the board been flipped or not?
     Square epsq;              // En passant square.
     char fifty;               // Fifty-move rule counter.
     std::uint64_t hash_key;   // Zobrist hash of the current position.
@@ -179,9 +180,9 @@ inline void flip_position(Position& pos)
     std::uint64_t* curr;
     for (curr = pos.pieces; curr < pos.pieces + 6; ++curr)
         *curr = __builtin_bswap64(*curr);
-    std::uint64_t tmp = pos.colours[1];
 
     // Reverse colour bitboards
+    std::uint64_t tmp = pos.colours[1];
     pos.colours[1] = pos.colours[0];
     pos.colours[0] = tmp;
 
@@ -197,6 +198,9 @@ inline void flip_position(Position& pos)
     std::uint8_t tmp2 = (pos.castle & 3) << 2;
     pos.castle >>= 2;
     pos.castle ^= tmp2;
+
+    // Flip flipped
+    pos.flipped = !pos.flipped;
 }
 
 extern std::uint64_t perft(const Position& pos, int depth);

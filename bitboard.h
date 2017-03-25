@@ -77,7 +77,6 @@ inline Square lsb(std::uint64_t bb)
 /* Get number of set bits. */
 inline int popcnt(std::uint64_t bb)
 {
-    assert(bb);
     return __builtin_popcountll(bb);
 }
 
