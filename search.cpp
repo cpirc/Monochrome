@@ -33,7 +33,25 @@ SOFTWARE.
 struct SearchStack {
     std::uint8_t ply;
     Move ml[256];
+    int score[256];
 };
+
+int score_move(const Position& pos, Move m)
+{
+    /* MVV/LVA */
+    Piece from = get_piece_on_square(pos, from_square(m));
+    Piece dest = get_piece_on_square(pos, to_square(m));
+
+    return piecevals[dest] - int(from);
+}
+
+/* Score a SearchStack. */
+void score_moves(const Position& pos, SearchStack* ss, int size)
+{
+    for (int i = 0; i < size; i++) {
+        ss->score[i] = score_move(pos, ss->ml[i]);
+    }
+}
 
 /* Alpha-Beta search a position to return a score. */
 int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
@@ -62,6 +80,8 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
     } else {
         movecount = generate(pos, ml);
     }
+
+    score_moves(pos, ss, movecount);
 
     int legal_moves = 0;
     Move best_move = 0;

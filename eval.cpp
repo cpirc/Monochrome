@@ -29,7 +29,7 @@ SOFTWARE.
 #include "types.h"
 
 /* Piece values for material in centipawns. */
-static const int piecevals[7] = {
+const int piecevals[7] = {
     100, 300, 300, 500, 900, 0, 0
 };
 
