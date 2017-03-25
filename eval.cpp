@@ -40,17 +40,7 @@ int evaluate_material(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * piecevals[p]) + evaluate_material<p+1>(pos);
-}
-
-/* Return material balance of a board. */
-/* Specialisation to end template recursion. */
-template<>
-int evaluate_material<QUEEN>(const Position& pos)
-{
-    std::uint64_t pieces = get_piece(pos, QUEEN, US);
-
-    return popcnt(pieces) * piecevals[QUEEN];
+    return (popcnt(pieces) * piecevals[p]) + (p == QUEEN ? 0 : evaluate_material<p+1>(pos));
 }
 
 /* Return the heuristic value of a position. */

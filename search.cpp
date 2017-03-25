@@ -32,8 +32,9 @@ int search(Position& pos, int depth, int alpha, int beta)
     Position npos;
     Move ml[256];
     int movecount, i, value;
+    const bool quies = depth <= 0;
 
-    if (depth <= 0) {
+    if (quies) {
         /* Stand pat. */
         value = evaluate(pos);
 

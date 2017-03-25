@@ -56,16 +56,7 @@ inline Piece get_piece_on_square(const Position& pos, const std::uint64_t sq)
 {
     if (pos.pieces[piece] & sq)
         return piece;
-    return get_piece_on_square<piece+1>(pos, sq);
-}
-
-/* Get the type of piece on a square(bitboard of the square) */
-template<>
-inline Piece get_piece_on_square<KING>(const Position& pos, const std::uint64_t sq)
-{
-    if (pos.pieces[KING] & sq)
-        return KING;
-    return NO_PIECE;
+    return (piece == KING) ? NO_PIECE : get_piece_on_square<piece+1>(pos, sq);
 }
 
 /* Get the type of piece on a square */
@@ -167,7 +158,7 @@ inline std::uint64_t attacks_to<PAWN>(const Position& pos, const Square sq, cons
     return (pawn_attacks(sq, by) & get_piece(pos, PAWN)) | attacks_to<KNIGHT>(pos, sq, occ, by);
 }
 
-/* Finish above template. */
+/* Required for C++11. C++17's if constexpr would solve this. */
 template<>
 inline std::uint64_t attacks_to<KING>(const Position& pos, const Square sq, const std::uint64_t occ, const Colour)
 {
