@@ -87,7 +87,6 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         return evaluate(pos);
     }
 
-    Move* ml = ss->ml;
     int movecount, value;
     const bool quies = depth <= 0;
     const bool in_check = is_checked(pos, US);
@@ -103,9 +102,9 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
             alpha = value;
         }
 
-        movecount = generate_captures(pos, ml);
+        movecount = generate_captures(pos, ss->ml);
     } else {
-        movecount = generate(pos, ml);
+        movecount = generate(pos, ss->ml);
     }
 
     score_moves(pos, ss, movecount);
