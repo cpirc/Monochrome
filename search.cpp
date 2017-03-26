@@ -53,6 +53,33 @@ void score_moves(const Position& pos, SearchStack* ss, int size)
     }
 }
 
+/* Return the best move from the search stack */
+Move next_move(SearchStack* ss, int& size)
+{
+    if (!size)
+        return 0;
+
+    // Find best move index
+    int best_index = 0;
+    for (int i = 1; i < size; ++i) {
+        if (ss->score[i] > ss->score[best_index]) {
+            best_index = i;
+        }
+    }
+
+    // Store the best move to return
+    Move best_move = ss->ml[best_index];
+
+    // Reduce ml/score size
+    --size;
+
+    // Bring the last move to current index
+    ss->ml[best_index] = ss->ml[size];
+    ss->score[best_index] = ss->score[size];
+
+    return best_move;
+}
+
 /* Alpha-Beta search a position to return a score. */
 int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
 {
@@ -61,7 +88,7 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
     }
 
     Move* ml = ss->ml;
-    int movecount, i, value;
+    int movecount, value;
     const bool quies = depth <= 0;
     const bool in_check = is_checked(pos, US);
 
@@ -86,11 +113,12 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
     int legal_moves = 0;
     Move best_move = 0;
 
-    for (i = 0; i < movecount; i++) {
+    Move move;
+    while ((move = next_move(ss, movecount))) {
 
         Position npos = pos;
 
-        make_move(npos, ml[i]);
+        make_move(npos, move);
         if (is_checked(npos, THEM)) {
             continue;
         }
@@ -104,7 +132,7 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         }
         if (value > alpha) {
             alpha = value;
-            best_move = ml[i];
+            best_move = move;
         }
     }
 
