@@ -29,27 +29,44 @@ SOFTWARE.
 #define MAX_PLY (64)
 #define INF     (30000)
 
+/* Records search statistics */
+struct Stats {
+    std::uint64_t node_count;
+#ifdef TESTING
+    std::uint64_t fail_highs;
+    std::uint64_t first_move_fail_highs;
+#endif
+};
+
 /* A data structure to pass local parameters thru */
 struct SearchStack {
     std::uint8_t ply;
     Move ml[256];
     int score[256];
+    Stats* stats;
 };
 
-int score_move(const Position& pos, Move m)
+/* MVV/LVA */
+int mvv_lva(const Position& pos, Move m)
 {
-    /* MVV/LVA */
     Piece from = get_piece_on_square(pos, from_square(m));
     Piece dest = get_piece_on_square(pos, to_square(m));
 
-    return piecevals[dest] - int(from);
+    return piecevals[dest] - from;
 }
 
 /* Score a SearchStack. */
 void score_moves(const Position& pos, SearchStack* ss, int size)
 {
     for (int i = 0; i < size; i++) {
-        ss->score[i] = score_move(pos, ss->ml[i]);
+        Move move = ss->ml[i];
+        int mt = move_type(move);
+        if (mt == CAPTURE)
+            ss->score[i] = mvv_lva(pos, move);
+        else if (mt == PROM_CAPTURE)
+            ss->score[i] = mvv_lva(pos, move) + piecevals[promotion_type(move)];
+        else if (mt == ENPASSANT)
+            ss->score[i] = piecevals[PAWN] - PAWN + 10;
     }
 }
 
@@ -107,6 +124,8 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         movecount = generate(pos, ss->ml);
     }
 
+    ++ss->stats->node_count;
+
     score_moves(pos, ss, movecount);
 
     int legal_moves = 0;
@@ -127,6 +146,11 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         value = -search(npos, depth - 1, -beta, -alpha, ss + 1);
 
         if (value >= beta) {
+#ifdef TESTING
+            ++ss->stats->fail_highs;
+            if (legal_moves == 1)
+                ++ss->stats->first_move_fail_highs;
+#endif
             return beta;
         }
         if (value > alpha) {
@@ -146,9 +170,22 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         char mstr[6];
         move_to_lan(mstr, best_move);
         printf("best move: %s\n", mstr);
+#ifdef TESTING
+        printf("ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
+#endif
     }
 
     return alpha;
+}
+
+/* Reset the stats object to 0 so we can start recording */
+void clear_stats(Stats& stats)
+{
+    stats.node_count = 0;
+#ifdef TESTING
+    stats.fail_highs = 0;
+    stats.first_move_fail_highs = 0;
+#endif
 }
 
 /* Reset the search stack to default values */
@@ -159,14 +196,26 @@ void clear_ss(SearchStack* ss, int size)
     }
 }
 
+/* Set the Stats pointer for all ply after 'stats' */
+void set_stats(SearchStack* ss, Stats& stats)
+{
+    SearchStack* end = ss - ss->ply + MAX_PLY;
+    for (; ss < end; ++ss) {
+        ss->stats = &stats;
+    }
+}
+
 /* Start searching a position and return the best move */
 Move start_search(Position& pos)
 {
+    Stats stats;
+    clear_stats(stats);
     SearchStack ss[MAX_PLY];
     clear_ss(ss, MAX_PLY);
+    set_stats(ss, stats);
     for (int depth = 1; depth < MAX_PLY; ++depth) {
         int score = search(pos, depth, -INF, +INF, ss);
-        printf("depth %d, score %d\n", depth, score);
+        printf("nodes %" PRIu64 " depth %d, score %d\n", ss->stats->node_count, depth, score);
     }
     Move move = 0;
     return move;

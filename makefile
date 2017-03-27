@@ -21,6 +21,9 @@ release:
 debug:
 	$(MAKE) FLAGS="$(DEBUG_FLAGS)"
 
+testing:
+	$(MAKE) FLAGS="$(FLAGS) -DTESTING"
+
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(FLAGS) -c $< -o $@
 
