@@ -33,3 +33,4 @@ engine
 # Misc
 .lvimrc
 *.cbp
+.ycm_extra_conf.py
