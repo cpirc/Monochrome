@@ -52,7 +52,7 @@ int mvv_lva(const Position& pos, Move m)
     Piece from = get_piece_on_square(pos, from_square(m));
     Piece dest = get_piece_on_square(pos, to_square(m));
 
-    return piecevals[dest] - from;
+    return piecevals[OPENING][dest] - from;
 }
 
 /* Score a SearchStack. */
@@ -64,9 +64,9 @@ void score_moves(const Position& pos, SearchStack* ss, int size)
         if (mt == CAPTURE)
             ss->score[i] = mvv_lva(pos, move);
         else if (mt == PROM_CAPTURE)
-            ss->score[i] = mvv_lva(pos, move) + piecevals[promotion_type(move)];
+            ss->score[i] = mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
-            ss->score[i] = piecevals[PAWN] - PAWN + 10;
+            ss->score[i] = piecevals[OPENING][PAWN] - PAWN + 10;
     }
 }
 

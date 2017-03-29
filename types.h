@@ -71,6 +71,11 @@ enum {
     THEM_OOO = 8
 };
 
+/* Material phases. */
+enum Phase {
+    OPENING, ENDGAME
+};
+
 #define ENABLE_OPERATIONS(T)                                                   \
 constexpr inline T operator+(T l, T r)   { return T((int)(l) + (int)(r)); }    \
 constexpr inline T operator+(T l, int r) { return T((int)(l) + r);        }    \
