@@ -40,10 +40,7 @@ int main(int argc, char *argv[])
 {
     init_bitboards();
 
-    char protocol[128];
-
-    read_until_newline_auto(stdin, protocol, 
-    char *input = read_until_newline(stdin);
+    char *input = read_until_newline_alloc(stdin);
 
     if (!std::strcmp(input, "uci\n")) {
         free(input);
