@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <chrono>
+#include <cinttypes>
+
 #include "eval.h"
 #include "move.h"
 #include "position.h"
@@ -209,13 +212,22 @@ void set_stats(SearchStack* ss, Stats& stats)
 Move start_search(Position& pos)
 {
     Stats stats;
-    clear_stats(stats);
     SearchStack ss[MAX_PLY];
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed;
+
+    clear_stats(stats);
     clear_ss(ss, MAX_PLY);
+
     set_stats(ss, stats);
+
+    start = std::chrono::high_resolution_clock::now();
+
     for (int depth = 1; depth < MAX_PLY; ++depth) {
         int score = search(pos, depth, -INF, +INF, ss);
-        printf("nodes %" PRIu64 " depth %d, score %d\n", ss->stats->node_count, depth, score);
+        end = std::chrono::high_resolution_clock::now();
+        elapsed = end - start;
+        printf("nodes %" PRIu64 " depth %d, score %d, time %fs\n", ss->stats->node_count, depth, score, elapsed.count());
     }
     Move move = 0;
     return move;
