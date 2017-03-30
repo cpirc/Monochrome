@@ -22,41 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <cstdio>
-#include <cstring>
+#ifndef UCI_H
+#define UCI_H
 
-#include "bitboard.h"
-#include "move.h"
-#include "position.h"
-#include "types.h"
-#include "misc.h"
-#include "tt.h"
-#include "search.h"
-#include "uci.h"
+extern char *read_until_newline_alloc(FILE *fd);
+extern bool read_until_newline_auto(FILE *fd, char *buff, std::size_t buff_len);
+extern int uci_main(int argc, char *argv[]);
 
 
-/* The start of all things (after _start) */
-int main(int argc, char *argv[])
-{
-    init_bitboards();
-
-    char protocol[128];
-
-    read_until_newline_auto(stdin, protocol, 
-    char *input = read_until_newline(stdin);
-
-    if (!std::strcmp(input, "uci\n")) {
-        free(input);
-        return uci_main(argc, argv);
-    }
-
-    /*Position pos;
-    parse_fen_to_position("3q3k/1Q4R1/2pNB2p/2Pp3n/8/6P1/3r2r1/7K b - - 3 38", pos);
-    parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", pos);
-    start_search(pos);*/
-
-    free(input);
-    std::printf("Unknown protocol\n");
-    return 1;
-}
-
+#endif //UCI_H
