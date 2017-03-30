@@ -29,32 +29,54 @@ SOFTWARE.
 #include "types.h"
 
 /* Piece values for material in centipawns. */
-const int piecevals[7] = {
-    100, 300, 300, 500, 900, 0, 0
+const int piecevals[2][7] = {
+    { 100, 300, 300, 500, 900, 0, 0 },
+    { 100, 300, 300, 500, 900, 0, 0 }
+};
+
+/* Phase weights for material. */
+const int phase[7] = {
+    0, 1, 1, 2, 4, 0, 0
 };
 
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
-template<Piece p = PAWN>
+template<Piece p = PAWN, Phase ph>
 int evaluate_material(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * piecevals[p]) + (p == QUEEN ? 0 : evaluate_material<p+1>(pos));
+    return (popcnt(pieces) * piecevals[ph][p]) + (p == QUEEN ? 0 : evaluate_material<p+1, ph>(pos));
+}
+
+/* Return material phase of a board. */
+/* 24 = opening, 0 = endgame. */
+/* TODO: incremental update this. */
+template<Piece p = PAWN>
+int material_phase(const Position& pos)
+{
+    std::uint64_t pieces = get_piece(pos, p, US);
+
+    return (popcnt(pieces) * phase[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
 }
 
 /* Return the heuristic value of a position. */
 int evaluate(Position& pos)
 {
-    int score = 0;
+    int opening = 0, endgame = 0;
+    int phase = material_phase<>(pos);
     Colour side;
 
     for (side = US; side <= THEM; ++side) {
-        score += evaluate_material<>(pos);
+        opening += evaluate_material<PAWN, OPENING>(pos);
+        endgame += evaluate_material<PAWN, ENDGAME>(pos);
 
-        score = -score;
+        opening = -opening;
+        endgame = -endgame;
         flip_position(pos);
     }
+
+    int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
     return pos.flipped ? -score : score;
 }
