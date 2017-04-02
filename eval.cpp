@@ -41,12 +41,12 @@ const int phase[7] = {
 
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
-template<Piece p = PAWN, Phase ph>
+template<Phase ph, Piece p = PAWN>
 int evaluate_material(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * piecevals[ph][p]) + (p == QUEEN ? 0 : evaluate_material<p+1, ph>(pos));
+    return (popcnt(pieces) * piecevals[ph][p]) + (p == QUEEN ? 0 : evaluate_material<ph, p+1>(pos));
 }
 
 /* Return material phase of a board. */
@@ -68,8 +68,8 @@ int evaluate(Position& pos)
     Colour side;
 
     for (side = US; side <= THEM; ++side) {
-        opening += evaluate_material<PAWN, OPENING>(pos);
-        endgame += evaluate_material<PAWN, ENDGAME>(pos);
+        opening += evaluate_material<OPENING>(pos);
+        endgame += evaluate_material<ENDGAME>(pos);
 
         opening = -opening;
         endgame = -endgame;

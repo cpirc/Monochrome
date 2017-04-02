@@ -172,7 +172,7 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
     if (!ss->ply) {
         char mstr[6];
         move_to_lan(mstr, best_move);
-        printf("best move: %s\n", mstr);
+        printf("info pv %s\n", mstr);
 #ifdef TESTING
         printf("ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
 #endif
@@ -227,7 +227,7 @@ Move start_search(Position& pos)
         int score = search(pos, depth, -INF, +INF, ss);
         end = std::chrono::high_resolution_clock::now();
         elapsed = end - start;
-        printf("nodes %" PRIu64 " depth %d, score %d, time %fs\n", ss->stats->node_count, depth, score, elapsed.count());
+        printf("info nodes %" PRIu64 " depth %d score cp %d time %d\n", ss->stats->node_count, depth, score, int(1000*elapsed.count()));
     }
     Move move = 0;
     return move;
