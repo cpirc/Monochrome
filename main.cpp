@@ -40,20 +40,23 @@ int main(int argc, char *argv[])
 {
     init_bitboards();
 
-    char *input = read_until_newline_alloc(stdin);
+    char protocol[12];
 
-    if (!std::strcmp(input, "uci\n")) {
-        free(input);
-        return uci_main(argc, argv);
-    }
+    if (getline_auto(stdin, protocol, 12)) {
+
+        if (!std::strcmp(protocol, "uci")) {
+            return uci_main(argc, argv);
+        }
+
+        std::puts("Invalid protocol!");
+    } else
+        std::puts("Stack attack!");
 
     /*Position pos;
     parse_fen_to_position("3q3k/1Q4R1/2pNB2p/2Pp3n/8/6P1/3r2r1/7K b - - 3 38", pos);
     parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", pos);
     start_search(pos);*/
 
-    free(input);
-    std::printf("Unknown protocol\n");
     return 1;
 }
 

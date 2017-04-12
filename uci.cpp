@@ -30,82 +30,72 @@ SOFTWARE.
 #include <cstdlib>
 #include <cassert>
 
-/* reads from the file descriptor fd into a newly allocated buffer pointed to by buff,
- * until either it hits EOF or '\n'.
- * Returns a pointer to the null-terminated buffer, without the '\n' character at the end. */
-char *read_until_newline_alloc(FILE *fd)
-{
-    static std::size_t const alloc_size = 127;
 
-    assert(fd);
+#define MAX_UCICMD_LEN 11
 
-    char *buff = NULL;
-    std::size_t idx = 0;
-    std::size_t curr_size = 0;
-    int c;
+#define ENABLE_LOGGING //comment this line out to disable log messages
 
-    //this is to skip initial whitespace (can be removed)
-    while ( (c = std::fgetc(fd)) != EOF && (c == '\n') );
+#ifdef ENABLE_LOGGING
+# define LOG(x) puts(x)
+#else
+# define LOG(x)
+#endif
 
-    if (!std::feof(fd)) {
 
-        curr_size = alloc_size;
-        buff = (char*)std::malloc(curr_size);
-        assert(buff);
+struct EngineOptions {
+    bool debug;
+    /* ... */
+} opt = {
+    .debug = false //debugging is turned off, by default
+};
 
-        do {
+static Position pos;
 
-            if (idx >= curr_size) {
+//stores the last character that was read from stdin
+//this is a global, because functions need to know the last
+//char in order to do proper line buffering
+static int c;
 
-                curr_size += alloc_size;
-                buff = (char*)std::realloc(buff, curr_size);
-                assert(buff);
 
-            }
+static bool flush_up_to_char(int upto);
+static bool handle_debug();
+static bool handle_go();
+static bool handle_position();
+static bool handle_register();
+static bool handle_setoption();
+static void handle_isready();
+static void handle_ucinewgame();
+static void handle_stop();
+static void handle_ponderhit();
+static void handle_simple_commands(char *cmd);
+static bool handle_all_commands(char *cmd);
 
-            buff[idx++] = (char)c;
-
-        } while ( ((c = std::fgetc(fd)) != EOF) && c != '\n');
-
-        if (idx >= curr_size) {
-
-            buff = (char*)std::realloc(buff, curr_size + 1);
-            assert(buff);
-
-        }
-
-        buff[idx] = '\0';
-
-    }
-
-    return buff;
-}
 
 /* reads from the file descriptor fd into the pre-allocated buffer pointed to by buff,
  * until either it hits EOF, '\n', or it reads buff_len - 1 characters.
  * Returns true if it read less than buff_len characters (or if the EOF character was read)
  * false otherwise. */
-bool read_until_newline_auto(FILE *fd, char *buff, std::size_t buff_len)
+bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
 {
     assert(buff && fd && buff_len);
 
     std::size_t idx = 0, idx_len = buff_len - 1;
-    int c;
+    int curr;
     bool ret = true;
 
-    while ( ((c = std::fgetc(fd)) != EOF) && c != '\n') {
+    while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n') {
 
         if (idx == idx_len)
             break;
 
-        buff[idx++] = (char)c;
+        buff[idx++] = (char)curr;
 
     }
 
     //flush stdin
-    if (c != EOF && c != '\n') {
+    if (curr != EOF && curr != '\n') {
         ret = false;
-        while ( ((c = std::fgetc(fd)) != EOF) && c != '\n');
+        while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n');
     }
 
     buff[idx] = '\0';
@@ -113,37 +103,257 @@ bool read_until_newline_auto(FILE *fd, char *buff, std::size_t buff_len)
     return ret;
 }
 
+bool flush_up_to_char(int upto)
+{
+    do {
+        c = std::fgetc(stdin);
+
+        if (c == EOF)
+            return false;
+
+    } while (c != upto);
+
+    return true;
+}
+
+//returns false on EOF
+//true on all other cases
+//debug command handler
+bool handle_debug()
+{
+    std::size_t i = 0;
+    char s[4];
+
+    while (1) {
+
+        c = std::fgetc(stdin);
+
+        switch (c) {
+            case EOF:
+                return false;
+            case '\n':
+            case '\t':
+            case ' ':
+                if (i) {
+                    s[i] = 0;
+
+                    if (!std::strcmp(s, "off")) {
+                        LOG("debug was disabled");
+                        opt.debug = false;
+                    } else if (!std::strcmp(s, "on")) {
+                        LOG("debug was enabled");
+                        opt.debug = true;
+                    } else {
+                        LOG("Unknown command!");
+                    }
+
+                    //now that we processed this command
+                    //we skip up to the first whitespace
+                    //before returning (if we haven't hit whitespace already)
+                    if (c != '\n') {
+                        return flush_up_to_char('\n');
+                    }
+
+                    return true;
+                }
+
+                if (c == '\n') {
+                    return true;
+                }
+
+                break;
+            default:
+                if (i >= 4) {
+                    LOG("Unknown command!");
+                    return flush_up_to_char('\n');
+                }
+
+                s[i++] = (char)c;
+                break;
+        }
+    }
+
+    return true;
+}
+
+bool handle_go()
+{
+    return true;
+}
+
+bool handle_position()
+{
+    return true;
+}
+
+bool handle_register()
+{
+    return true;
+}
+
+bool handle_setoption()
+{
+    return true;
+}
+
+void handle_isready()
+{
+}
+
+void handle_ucinewgame()
+{
+}
+
+void handle_stop()
+{
+}
+
+void handle_ponderhit()
+{
+}
+
+void handle_simple_commands(char *cmd)
+{
+    if (!std::strcmp(cmd, "isready")) {
+        LOG("isready command");
+        handle_isready();
+    } else if (!std::strcmp(cmd, "ucinewgame")) {
+        LOG("ucinewgame command");
+        handle_ucinewgame();
+    } else if (!std::strcmp(cmd, "stop")) {
+        LOG("stop command");
+        handle_stop();
+    } else if (!std::strcmp(cmd, "ponderhit")) {
+        LOG("ponderhit command");
+        handle_ponderhit();
+    } else {
+        LOG("Unknown command!");
+    }
+}
+
+//returns false if EOF was hit while processing a command
+//returns true on all other cases (even if the command was wrong)
+bool handle_all_commands(char *cmd)
+{
+    if (!std::strcmp(cmd, "debug")) {
+        return handle_debug();
+    }
+
+    if (!std::strcmp(cmd, "go")) {
+        return handle_go();
+    }
+
+    if (!std::strcmp(cmd, "position")) {
+        return handle_position();
+    }
+
+    if (!std::strcmp(cmd, "register")) {
+        return handle_register();
+    }
+
+    if (!std::strcmp(cmd, "setoption")) {
+        return handle_setoption();
+    }
+
+    handle_simple_commands(cmd);
+
+    //handles the case where a single word command is entered
+    //but isn't followed by '\n' and instead it's followed by whitespace.
+    //e.g "          ponderhit    \t"
+    if (c != '\n')
+        return flush_up_to_char('\n');
+
+    return true;
+}
+
 int uci_main(int argc, char *argv[])
 {
-    std::puts("id name CPirc Chess-Engine\n");
+    (void)argc;
+    (void)argv;
+
+    std::puts("id name CPirc Chess-Engine");
+    std::puts("id author mkchan ZirconiumX Gikoskos");
 
     //send options to the GUI here
     //std::puts("option \n");
 
-    std::puts("uciok\n");
+    std::puts("uciok");
 
-    char *msg = NULL;
+    char msg[MAX_UCICMD_LEN];
+    std::size_t i = 0;
 
 
-    //set options
     while (1) {
 
-        msg = read_until_newline_alloc(stdin);
+        c = std::fgetc(stdin);
 
-        if (!std::strcmp(msg, "quit")) {
-            std::free(msg);
-            break;
+        switch (c) {
+            case EOF:
+                return 1;
+            case '\n':
+
+                if (i) {
+                    msg[i] = 0;
+
+                    if (!std::strcmp(msg, "quit")) {
+                        LOG("quitting!!!");
+                        goto RET;
+                    }
+
+                    //if the last character that was entered, was a '\n'
+                    //there's no need to compare the 'msg' string against
+                    //commands that are followed by options. We only check
+                    //if 'msg' is one of the single word commands, and if
+                    //it's not, then it's an invalid command
+                    handle_simple_commands(msg);
+
+                    i = 0;
+                }
+
+                break;
+            case ' ':
+            case '\t':
+
+                if (i) {
+                    msg[i] = 0;
+
+                    if (!std::strcmp(msg, "quit")) {
+                        LOG("quitting!!!");
+                        goto RET;
+                    }
+
+                    //if the command was processed correctly
+                    //then handle_all_commands will skip up to the first newline ('\n')
+                    //character, meaning that the next char that will be read
+                    //will be the first char on the next line (or on the next command)
+                    if (!handle_all_commands(msg))
+                        return 1;
+
+                    i = 0;
+                }
+
+                break;
+            default:
+                msg[i++] = (char)c;
+                break;
         }
 
-        /* if (std::strstr(msg, "setoption")) {
-            //handle options
-        } */
 
-        
+        //if there's a word in the buffer, that's longer
+        //than the longest UCI command length (ucinewgame)
+        //meaning that it's an invalid command,
+        //skip all the characters up to the first whitespace
+        if (i >= MAX_UCICMD_LEN) {
 
-        std::free(msg);
+            i = 0;
+
+            if (!flush_up_to_char(' '))
+                return 1;
+
+        }
 
     }
 
+RET:
     return 0;
 }
