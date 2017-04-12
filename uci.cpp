@@ -179,22 +179,22 @@ bool handle_debug()
 
 bool handle_go()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_position()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_register()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_setoption()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 void handle_isready()
@@ -237,22 +237,27 @@ void handle_simple_commands(char *cmd)
 bool handle_all_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "debug")) {
+        LOG("debug command");
         return handle_debug();
     }
 
     if (!std::strcmp(cmd, "go")) {
+        LOG("go command");
         return handle_go();
     }
 
     if (!std::strcmp(cmd, "position")) {
+        LOG("position command");
         return handle_position();
     }
 
     if (!std::strcmp(cmd, "register")) {
+        LOG("register command");
         return handle_register();
     }
 
     if (!std::strcmp(cmd, "setoption")) {
+        LOG("setoption command");
         return handle_setoption();
     }
 
