@@ -37,9 +37,13 @@ SOFTWARE.
 #define ENABLE_LOGGING //comment this line out to disable log messages
 
 #ifdef ENABLE_LOGGING
-# define LOG(x) std::puts(x)
+# define LOG(fmt, ...) \
+    do { \
+        std::printf(fmt, ##__VA_ARGS__); \
+        std::putchar('\n'); \
+    } while (0)
 #else
-# define LOG(x)
+# define LOG(fmt, ...)
 #endif
 
 
@@ -59,6 +63,8 @@ static int c;
 
 
 static bool flush_up_to_char(int upto);
+static bool flush_up_to_whitespace();
+
 static bool handle_debug();
 static bool handle_go();
 static bool handle_position();
@@ -68,6 +74,7 @@ static void handle_isready();
 static void handle_ucinewgame();
 static void handle_stop();
 static void handle_ponderhit();
+
 static void handle_simple_commands(char *cmd);
 static bool handle_all_commands(char *cmd);
 
@@ -117,6 +124,19 @@ bool flush_up_to_char(int upto)
     return true;
 }
 
+bool flush_up_to_whitespace()
+{
+    do {
+        c = std::fgetc(stdin);
+
+        if (c == EOF)
+            return false;
+
+    } while (!std::isspace(c));
+
+    return true;
+}
+
 //returns false on EOF
 //true on all other cases
 //debug command handler
@@ -129,48 +149,48 @@ bool handle_debug()
 
         c = std::fgetc(stdin);
 
-        switch (c) {
-            case EOF:
-                return false;
-            case '\n':
-            case '\t':
-            case ' ':
-                if (i) {
-                    s[i] = 0;
+        if (c == EOF) {
 
-                    if (!std::strcmp(s, "off")) {
-                        LOG("debug was disabled");
-                        opt.debug = false;
-                    } else if (!std::strcmp(s, "on")) {
-                        LOG("debug was enabled");
-                        opt.debug = true;
-                    } else {
-                        LOG("Unknown command!");
-                    }
+            return false;
 
-                    //now that we processed this command
-                    //we skip up to the first whitespace
-                    //before returning (if we haven't hit whitespace already)
-                    if (c != '\n') {
-                        return flush_up_to_char('\n');
-                    }
+        } else if (std::isspace(c)) {
 
-                    return true;
-                }
+            if (i) {
+                s[i] = 0;
 
-                if (c == '\n') {
-                    return true;
-                }
-
-                break;
-            default:
-                if (i >= 4) {
+                if (!std::strcmp(s, "off")) {
+                    LOG("debug was disabled");
+                    opt.debug = false;
+                } else if (!std::strcmp(s, "on")) {
+                    LOG("debug was enabled");
+                    opt.debug = true;
+                } else {
                     LOG("Unknown command!");
+                }
+
+                //now that we processed this command
+                //we skip up to the first whitespace
+                //before returning (if we haven't hit whitespace already)
+                if (c != '\n') {
                     return flush_up_to_char('\n');
                 }
 
-                s[i++] = (char)c;
-                break;
+                return true;
+            }
+
+            if (c == '\n') {
+                return true;
+            }
+
+        } else {
+
+            if (i >= 4) {
+                LOG("Unknown command!");
+                return flush_up_to_char('\n');
+            }
+
+            s[i++] = (char)c;
+
         }
     }
 
@@ -179,22 +199,22 @@ bool handle_debug()
 
 bool handle_go()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_position()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_register()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 bool handle_setoption()
 {
-    return true;
+    return flush_up_to_char('\n');
 }
 
 void handle_isready()
@@ -213,6 +233,8 @@ void handle_ponderhit()
 {
 }
 
+//seperate handler for single word commands that aren't
+//bound to be followed by other words
 void handle_simple_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "isready")) {
@@ -228,7 +250,7 @@ void handle_simple_commands(char *cmd)
         LOG("ponderhit command");
         handle_ponderhit();
     } else {
-        LOG("Unknown command!");
+        LOG("Unknown command : %s!", cmd);
     }
 }
 
@@ -237,35 +259,42 @@ void handle_simple_commands(char *cmd)
 bool handle_all_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "debug")) {
+        LOG("debug command");
         return handle_debug();
     }
 
     if (!std::strcmp(cmd, "go")) {
+        LOG("go command");
         return handle_go();
     }
 
     if (!std::strcmp(cmd, "position")) {
+        LOG("position command");
         return handle_position();
     }
 
     if (!std::strcmp(cmd, "register")) {
+        LOG("register command");
         return handle_register();
     }
 
     if (!std::strcmp(cmd, "setoption")) {
+        LOG("setoption command");
         return handle_setoption();
     }
 
     //handles "arbitrary white space between tokens is allowed" case
-    //for single-word commands. if no white space is found after a command
-    //it returns without processing it
+    //for single-word commands. if other characters are found after a command
+    //it returns without processing it.
+    //e.g. legal : " isready   \t \t  \n"
+    //   illegal : "\t\t isready   \t testtest \t\n"
     if (c != '\n') {
 
         do {
             c = std::fgetc(stdin);
 
             if (!std::isspace(c)) {
-                LOG("Unknown command!");
+                //LOG("Unknown command : %s!", cmd);
                 return true;
             }
 
@@ -281,6 +310,9 @@ bool handle_all_commands(char *cmd)
     return true;
 }
 
+
+//returns 1 if it reads EOF from stdin
+//returns 0 on all other cases
 int uci_main(int argc, char *argv[])
 {
     (void)argc;
@@ -298,77 +330,92 @@ int uci_main(int argc, char *argv[])
     std::size_t i = 0;
 
 
+    //this loop, parses only the first word of a command,
+    //e.g. on the string "hello world\n", this loop will stop at "hello"
+    //and send that message to the handlers for processing. If "hello" is
+    //a valid command, then the handlers will skip the rest of the line
+    //(or they will read from it if they need more options) and return to the loop.
+    //If it's an invalid command, the handlers won't do anything to this token and
+    //return back to the loop, where the next token will be read from the line (if
+    //there is one) and the process will repeat. If the rest of the line is just
+    //whitespace characters, it will be ignored.
     while (1) {
 
         c = std::fgetc(stdin);
 
-        switch (c) {
-            case EOF:
-                return 1;
-            case '\n':
+        if (c == EOF) {
+            return 1;
+        } else if (c == '\n') {
 
-                if (i) {
-                    msg[i] = 0;
+            //handles cases where the word is followed by a newline like
+            // "     isready\n"
+            // "\t\tstop\n"
+            //if a word is followed by a newline, during the parsing in this loop
+            //it can't be a command that is followed by options (e.g. "debug off").
+            //so we don't account for these cases
+            if (i) {
+                msg[i] = 0;
 
-                    if (!std::strcmp(msg, "quit")) {
-                        LOG("quitting!!!");
-                        goto RET;
-                    }
-
-                    //if the last character that was entered, was a '\n'
-                    //there's no need to compare the 'msg' string against
-                    //commands that are followed by options. We only check
-                    //if 'msg' is one of the single word commands, and if
-                    //it's not, then it's an invalid command
-                    handle_simple_commands(msg);
-
-                    i = 0;
+                if (!std::strcmp(msg, "quit")) {
+                    LOG("quitting!!!");
+                    break;
                 }
 
-                break;
-            case ' ':
-            case '\t':
+                //if the last character that was entered, was a '\n'
+                //there's no need to compare the 'msg' string against
+                //commands that are followed by options. We only check
+                //if 'msg' is one of the single word commands, and if
+                //it's not, then it's an invalid command
+                handle_simple_commands(msg);
 
-                if (i) {
-                    msg[i] = 0;
+                i = 0;
+            }
 
-                    if (!std::strcmp(msg, "quit")) {
-                        LOG("quitting!!!");
-                        goto RET;
-                    }
+        } else if (std::isspace(c)) {
 
-                    //if the command was processed correctly
-                    //then handle_all_commands will skip up to the first newline ('\n')
-                    //character, meaning that the next char that will be read
-                    //will be the first char on the next line (or on the next command)
-                    if (!handle_all_commands(msg))
-                        return 1;
+            //handles all other cases
+            if (i) {
+                msg[i] = 0;
 
-                    i = 0;
+                if (!std::strcmp(msg, "quit")) {
+                    LOG("quitting!!!");
+                    break;
                 }
 
-                break;
-            default:
-                msg[i++] = (char)c;
-                break;
-        }
+                //if the command was processed correctly
+                //then handle_all_commands will skip up to the first newline ('\n')
+                //character, meaning that the next char that will be read
+                //will be the first char on the next line (or on the next command)
+                if (!handle_all_commands(msg))
+                    return 1;
 
+                i = 0;
 
-        //if there's a word in the buffer, that's longer
-        //than the longest UCI command length (ucinewgame)
-        //meaning that it's an invalid command,
-        //skip all the characters up to the first whitespace
-        if (i >= MAX_UCICMD_LEN) {
+                if (!std::isspace(c)) {
+                    msg[i++] = c;
+                }
+            }
 
-            i = 0;
+        } else {
 
-            if (!flush_up_to_char(' '))
-                return 1;
+            //if there's a word in the buffer, that's longer
+            //than the longest UCI command length (ucinewgame)
+            //meaning that it's an invalid command,
+            //skip all the characters up to the first whitespace
+            if (i >= MAX_UCICMD_LEN) {
+
+                i = 0;
+
+                if (!flush_up_to_whitespace())
+                    return 1;
+
+            }
+
+            msg[i++] = (char)c;
 
         }
 
     }
 
-RET:
     return 0;
 }
