@@ -29,6 +29,7 @@ SOFTWARE.
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <cctype> //for std::isspace
 
 
 #define MAX_UCICMD_LEN 11
@@ -36,7 +37,7 @@ SOFTWARE.
 #define ENABLE_LOGGING //comment this line out to disable log messages
 
 #ifdef ENABLE_LOGGING
-# define LOG(x) puts(x)
+# define LOG(x) std::puts(x)
 #else
 # define LOG(x)
 #endif
@@ -255,13 +256,27 @@ bool handle_all_commands(char *cmd)
         return handle_setoption();
     }
 
-    handle_simple_commands(cmd);
+    //handles "arbitrary white space between tokens is allowed" case
+    //for single-word commands. if no white space is found after a command
+    //it returns without processing it
+    if (c != '\n') {
 
-    //handles the case where a single word command is entered
-    //but isn't followed by '\n' and instead it's followed by whitespace.
-    //e.g "          ponderhit    \t"
-    if (c != '\n')
-        return flush_up_to_char('\n');
+        do {
+            c = std::fgetc(stdin);
+
+            if (!std::isspace(c)) {
+                LOG("Unknown command!");
+                return true;
+            }
+
+            if (c == EOF)
+                return false;
+
+        } while (c != '\n');
+
+    }
+
+    handle_simple_commands(cmd);
 
     return true;
 }
