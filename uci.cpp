@@ -294,7 +294,7 @@ bool handle_all_commands(char *cmd)
             c = std::fgetc(stdin);
 
             if (!std::isspace(c)) {
-                //LOG("Unknown command : %s!", cmd);
+                LOG("Unknown command : %s!", cmd);
                 return true;
             }
 
@@ -409,9 +409,9 @@ int uci_main(int argc, char *argv[])
                 if (!flush_up_to_whitespace())
                     return 1;
 
+            } else {
+                msg[i++] = (char)c;
             }
-
-            msg[i++] = (char)c;
 
         }
 
