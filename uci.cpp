@@ -118,7 +118,7 @@ bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
 
 void handle_eof()
 {
-    LOG("Received EOF!");
+    //LOG("Received EOF!");
     std::exit(EXIT_FAILURE);
 }
 
@@ -272,8 +272,10 @@ void handle_simple_commands(char *cmd)
     }
 }
 
-//returns true if the command processing was successful
-//returns false on all other cases
+//returns false if the command that was about to be processed
+//was a simple command and was followed by characters other than whitespace
+//e.g. "ucinewgame       test\n"
+//returns true on all other cases
 bool handle_all_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "debug")) {
@@ -318,10 +320,8 @@ bool handle_all_commands(char *cmd)
                     return false;
                 }
 
-                if (c == EOF) {
-                    puts("NOP");
+                if (c == EOF)
                     handle_eof();
-                }
 
             } while (c != '\n');
 
@@ -334,9 +334,6 @@ bool handle_all_commands(char *cmd)
     return true;
 }
 
-
-//returns 1 if it reads EOF from stdin
-//returns 0 on all other cases
 int uci_main(int argc, char *argv[])
 {
     (void)argc;
@@ -364,7 +361,7 @@ int uci_main(int argc, char *argv[])
     //return back to the loop, where the next token will be read from the line (if
     //there is one) and the process will repeat. If the rest of the line is just
     //whitespace characters, it will be ignored.
-    while (running) {
+    while (running) { //the running bool is toggled only if the GUI sends a "quit" command
 
         c = std::fgetc(stdin);
 
