@@ -39,8 +39,9 @@ SOFTWARE.
 #ifdef ENABLE_LOGGING
 # define LOG(fmt, ...) \
     do { \
+        std::printf("=== "); \
         std::printf(fmt, ##__VA_ARGS__); \
-        std::putchar('\n'); \
+        std::printf(" ===\n"); \
     } while (0)
 #else
 # define LOG(fmt, ...)
@@ -72,7 +73,11 @@ static void flush_up_to_whitespace();
 
 static void handle_debug();
 static void handle_go();
+
 static void handle_position();
+static void handle_position_startpos();
+static void handle_position_fen();
+
 static void handle_register();
 static void handle_setoption();
 static void handle_isready();
@@ -149,7 +154,7 @@ void handle_debug()
     std::size_t i = 0;
     char s[4]; //the debug command can only be followed by
     //the strings "on" or "off". s has the length of the biggest
-    //string, plus '\0'.
+    //allowed string, plus '\0' (size of "off").
 
     while (1) {
 
@@ -162,6 +167,7 @@ void handle_debug()
         } else if (std::isspace(c)) {
 
             if (i) {
+
                 s[i] = 0;
 
                 if (!std::strcmp(s, "off")) {
@@ -179,19 +185,19 @@ void handle_debug()
                 //before returning (if we haven't hit whitespace already)
                 if (c != '\n') {
                     flush_up_to_char('\n');
-                    break;
                 }
 
                 break;
             }
 
             if (c == '\n') {
+                LOG("Invalid use of debug command");
                 break;
             }
 
         } else {
 
-            if (i >= 4) {
+            if (i >= 3) {
                 flush_up_to_char('\n');
 
                 s[3] = 0;
@@ -211,9 +217,75 @@ void handle_go()
     flush_up_to_char('\n');
 }
 
+void handle_position_fen()
+{
+    
+}
+
+void handle_position_startpos()
+{
+    
+}
+
 void handle_position()
 {
-    flush_up_to_char('\n');
+    std::size_t i = 0;
+    char s[9];
+
+    while (1) {
+
+        c = std::fgetc(stdin);
+
+        if (c == EOF) {
+
+            handle_eof();
+
+        } else if (std::isspace(c)) {
+
+            if (i) {
+
+                s[i] = 0;
+
+                if (!std::strcmp(s, "fen")) {
+                    LOG("fen format");
+                    handle_position_fen();
+                } else if (!std::strcmp(s, "startpos")) {
+                    LOG("lan format");
+                    handle_position_startpos();
+                } else {
+                    LOG("Unrecognized token : \"%s\"", s);
+                }
+
+                //now that we processed this command
+                //we skip up to the first whitespace
+                //before returning (if we haven't hit whitespace already)
+                if (c != '\n') {
+                    flush_up_to_char('\n');
+                }
+
+                break;
+            }
+
+            if (c == '\n') {
+                LOG("Invalid use of position command");
+                break;
+            }
+
+        } else {
+
+            if (i >= 8) {
+                flush_up_to_char('\n');
+
+                s[8] = 0;
+
+                LOG("Token \"%s...\" exceeds max token length", s);
+                break;
+            }
+
+            s[i++] = (char)c;
+
+        }
+    }
 }
 
 void handle_register()
@@ -233,6 +305,7 @@ void handle_isready()
 
 void handle_ucinewgame()
 {
+    std::memset((void*)&pos, 0, sizeof(Position));
 }
 
 void handle_stop()
@@ -279,30 +352,20 @@ void handle_simple_commands(char *cmd)
 bool handle_all_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "debug")) {
-
         LOG("debug command");
         handle_debug();
-
     } else if (!std::strcmp(cmd, "go")) {
-
         LOG("go command");
         handle_go();
-
     } else if (!std::strcmp(cmd, "position")) {
-
         LOG("position command");
         handle_position();
-
     } else if (opt.registration && !std::strcmp(cmd, "register")) {
-
         LOG("register command");
         handle_register();
-
     } else if (!std::strcmp(cmd, "setoption")) {
-
         LOG("setoption command");
         handle_setoption();
-
     } else {
 
         //this next loop cleans up the rest of the buffer until '\n'.
