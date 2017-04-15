@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
             return uci_main(argc, argv);
         }
 
-        std::puts("Invalid protocol!");
+        std::puts("Unsupported protocol!");
     } else
-        std::puts("Stack attack!");
+        std::puts("Stack overflow!");
 
     /*Position pos;
     parse_fen_to_position("3q3k/1Q4R1/2pNB2p/2Pp3n/8/6P1/3r2r1/7K b - - 3 38", pos);

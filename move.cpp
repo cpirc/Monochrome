@@ -153,3 +153,29 @@ void run_move_to_lan_tests(void)
     move_to_lan(str, get_move(F2, F1, PROMOTION, TO_KNIGHT));
     printf("%s\n", str);
 }
+
+/*void lan_to_move(const char* lan_str, Move& move)
+{
+    Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
+             to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
+
+    if (from < INVALID_SQUARE && to < INVALID_SQUARE) {
+        switch (lan_str[4]) {
+        case 'n':
+            move = get_move(from, to, PROMOTION, TO_KNIGHT);
+            break;
+        case 'b':
+            move = get_move(from, to, PROMOTION, TO_BISHOP);
+            break;
+        case 'r':
+            move = get_move(from, to, PROMOTION, TO_ROOK);
+            break;
+        case 'q':
+            move = get_move(from, to, PROMOTION, TO_QUEEN);
+            break;
+        default:
+            move = get_move(from, to, NORMAL);
+            break;
+        }
+    }
+}*/

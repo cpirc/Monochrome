@@ -49,9 +49,11 @@ SOFTWARE.
 
 struct EngineOptions {
     bool debug;
+    bool registration;
     /* ... */
 } opt = {
-    .debug = false //debugging is turned off, by default
+    .debug = false, //debugging is turned off, by default
+    .registration = false //this engine doesn't need registration to fully work
 };
 
 static Position pos;
@@ -61,15 +63,16 @@ static Position pos;
 //char in order to do proper line buffering
 static int c;
 
+static void handle_eof();
 
-static bool flush_up_to_char(int upto);
-static bool flush_up_to_whitespace();
+static void flush_up_to_char(int upto);
+static void flush_up_to_whitespace();
 
-static bool handle_debug();
-static bool handle_go();
-static bool handle_position();
-static bool handle_register();
-static bool handle_setoption();
+static void handle_debug();
+static void handle_go();
+static void handle_position();
+static void handle_register();
+static void handle_setoption();
 static void handle_isready();
 static void handle_ucinewgame();
 static void handle_stop();
@@ -111,39 +114,40 @@ bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
     return ret;
 }
 
-bool flush_up_to_char(int upto)
+void handle_eof()
+{
+    LOG("Received EOF!");
+    std::exit(EXIT_FAILURE);
+}
+
+void flush_up_to_char(int upto)
 {
     do {
         c = std::fgetc(stdin);
 
         if (c == EOF)
-            return false;
+            handle_eof();
 
     } while (c != upto);
-
-    return true;
 }
 
-bool flush_up_to_whitespace()
+void flush_up_to_whitespace()
 {
     do {
         c = std::fgetc(stdin);
 
         if (c == EOF)
-            return false;
+            handle_eof();
 
     } while (!std::isspace(c));
-
-    return true;
 }
 
-//returns false on EOF
-//true on all other cases
-//debug command handler
-bool handle_debug()
+void handle_debug()
 {
     std::size_t i = 0;
-    char s[4];
+    char s[4]; //the debug command can only be followed by
+    //the strings "on" or "off". s has the length of the biggest
+    //string, plus '\0'.
 
     while (1) {
 
@@ -151,7 +155,7 @@ bool handle_debug()
 
         if (c == EOF) {
 
-            return false;
+            handle_eof();
 
         } else if (std::isspace(c)) {
 
@@ -165,60 +169,64 @@ bool handle_debug()
                     LOG("debug was enabled");
                     opt.debug = true;
                 } else {
-                    LOG("Unknown command!");
+                    LOG("Unrecognized token : \"%s\"", s);
                 }
 
                 //now that we processed this command
                 //we skip up to the first whitespace
                 //before returning (if we haven't hit whitespace already)
                 if (c != '\n') {
-                    return flush_up_to_char('\n');
+                    flush_up_to_char('\n');
+                    break;
                 }
 
-                return true;
+                break;
             }
 
             if (c == '\n') {
-                return true;
+                break;
             }
 
         } else {
 
             if (i >= 4) {
-                LOG("Unknown command!");
-                return flush_up_to_char('\n');
+                flush_up_to_char('\n');
+
+                s[3] = 0;
+
+                LOG("Token \"%s...\" exceeds max token length", s);
+                break;
             }
 
             s[i++] = (char)c;
 
         }
     }
-
-    return true;
 }
 
-bool handle_go()
+void handle_go()
 {
-    return flush_up_to_char('\n');
+    flush_up_to_char('\n');
 }
 
-bool handle_position()
+void handle_position()
 {
-    return flush_up_to_char('\n');
+    flush_up_to_char('\n');
 }
 
-bool handle_register()
+void handle_register()
 {
-    return flush_up_to_char('\n');
+    flush_up_to_char('\n');
 }
 
-bool handle_setoption()
+void handle_setoption()
 {
-    return flush_up_to_char('\n');
+    flush_up_to_char('\n');
 }
 
 void handle_isready()
 {
+    std::puts("readyok");
 }
 
 void handle_ucinewgame()
@@ -233,8 +241,14 @@ void handle_ponderhit()
 {
 }
 
+void handle_quit()
+{
+    LOG("Quitting!");
+    std::exit(0);
+}
+
 //seperate handler for single word commands that aren't
-//bound to be followed by other words
+//bound to be followed by other words (e.g "isready\n", "    \t\t  ucinewgame\n")
 void handle_simple_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "isready")) {
@@ -249,63 +263,70 @@ void handle_simple_commands(char *cmd)
     } else if (!std::strcmp(cmd, "ponderhit")) {
         LOG("ponderhit command");
         handle_ponderhit();
+    } else if (!std::strcmp(cmd, "quit")) {
+        LOG("quit command");
+        handle_quit();
     } else {
-        LOG("Unknown command : %s!", cmd);
+        LOG("Unrecognized token : \"%s\"", cmd);
     }
 }
 
-//returns false if EOF was hit while processing a command
-//returns true on all other cases (even if the command was wrong)
+//returns true if the command processing was successful
+//returns false on all other cases
 bool handle_all_commands(char *cmd)
 {
     if (!std::strcmp(cmd, "debug")) {
+
         LOG("debug command");
-        return handle_debug();
-    }
+        handle_debug();
 
-    if (!std::strcmp(cmd, "go")) {
+    } else if (!std::strcmp(cmd, "go")) {
+
         LOG("go command");
-        return handle_go();
-    }
+        handle_go();
 
-    if (!std::strcmp(cmd, "position")) {
+    } else if (!std::strcmp(cmd, "position")) {
+
         LOG("position command");
-        return handle_position();
-    }
+        handle_position();
 
-    if (!std::strcmp(cmd, "register")) {
+    } else if (opt.registration && !std::strcmp(cmd, "register")) {
+
         LOG("register command");
-        return handle_register();
-    }
+        handle_register();
 
-    if (!std::strcmp(cmd, "setoption")) {
+    } else if (!std::strcmp(cmd, "setoption")) {
+
         LOG("setoption command");
-        return handle_setoption();
+        handle_setoption();
+
+    } else {
+
+        //this next loop cleans up the rest of the buffer until '\n'.
+        //This is done, because simple commands aren't followed by options, so
+        //while clearing up the buffer we check if we hit a character that isn't
+        //whitespace, in which case the command processing fails.
+        //e.g. legal : " isready   \t \t  \n"
+        //   illegal : "\t\t isready   \t testtest \t\n"
+        if (c != '\n') {
+
+            do {
+                c = std::fgetc(stdin);
+
+                if (!std::isspace(c)) {
+                    return false;
+                }
+
+                if (c == EOF)
+                    handle_eof();
+
+            } while (c != '\n');
+
+        }
+
+        handle_simple_commands(cmd);
+
     }
-
-    //handles "arbitrary white space between tokens is allowed" case
-    //for single-word commands. if other characters are found after a command
-    //it returns without processing it.
-    //e.g. legal : " isready   \t \t  \n"
-    //   illegal : "\t\t isready   \t testtest \t\n"
-    if (c != '\n') {
-
-        do {
-            c = std::fgetc(stdin);
-
-            if (!std::isspace(c)) {
-                LOG("Unknown command : %s!", cmd);
-                return true;
-            }
-
-            if (c == EOF)
-                return false;
-
-        } while (c != '\n');
-
-    }
-
-    handle_simple_commands(cmd);
 
     return true;
 }
@@ -326,7 +347,7 @@ int uci_main(int argc, char *argv[])
 
     std::puts("uciok");
 
-    char msg[MAX_UCICMD_LEN];
+    char token[MAX_UCICMD_LEN];
     std::size_t i = 0;
 
 
@@ -344,7 +365,7 @@ int uci_main(int argc, char *argv[])
         c = std::fgetc(stdin);
 
         if (c == EOF) {
-            return 1;
+            handle_eof();
         } else if (c == '\n') {
 
             //handles cases where the word is followed by a newline like
@@ -354,46 +375,31 @@ int uci_main(int argc, char *argv[])
             //it can't be a command that is followed by options (e.g. "debug off").
             //so we don't account for these cases
             if (i) {
-                msg[i] = 0;
+                token[i] = 0;
 
-                if (!std::strcmp(msg, "quit")) {
-                    LOG("quitting!!!");
-                    break;
-                }
+                i = 0;
 
                 //if the last character that was entered, was a '\n'
                 //there's no need to compare the 'msg' string against
                 //commands that are followed by options. We only check
                 //if 'msg' is one of the single word commands, and if
                 //it's not, then it's an invalid command
-                handle_simple_commands(msg);
+                handle_simple_commands(token);
 
-                i = 0;
             }
 
         } else if (std::isspace(c)) {
 
             //handles all other cases
             if (i) {
-                msg[i] = 0;
-
-                if (!std::strcmp(msg, "quit")) {
-                    LOG("quitting!!!");
-                    break;
-                }
-
-                //if the command was processed correctly
-                //then handle_all_commands will skip up to the first newline ('\n')
-                //character, meaning that the next char that will be read
-                //will be the first char on the next line (or on the next command)
-                if (!handle_all_commands(msg))
-                    return 1;
+                token[i] = 0;
 
                 i = 0;
 
-                if (!std::isspace(c)) {
-                    msg[i++] = c;
+                if (!handle_all_commands(token)) {
+                    token[i++] = c;
                 }
+
             }
 
         } else {
@@ -406,16 +412,19 @@ int uci_main(int argc, char *argv[])
 
                 i = 0;
 
-                if (!flush_up_to_whitespace())
-                    return 1;
+                flush_up_to_whitespace();
+
+                token[MAX_UCICMD_LEN - 1] = '\0';
+                LOG("Token \"%s...\" exceeds max token length", token);
 
             } else {
-                msg[i++] = (char)c;
+                token[i++] = (char)c;
             }
 
         }
 
     }
 
+    //unreachable
     return 0;
 }
