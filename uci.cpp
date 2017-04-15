@@ -63,6 +63,8 @@ static Position pos;
 //char in order to do proper line buffering
 static int c;
 
+static bool running;
+
 static void handle_eof();
 
 static void flush_up_to_char(int upto);
@@ -243,8 +245,7 @@ void handle_ponderhit()
 
 void handle_quit()
 {
-    LOG("Quitting!");
-    std::exit(0);
+    running = false;
 }
 
 //seperate handler for single word commands that aren't
@@ -317,8 +318,10 @@ bool handle_all_commands(char *cmd)
                     return false;
                 }
 
-                if (c == EOF)
+                if (c == EOF) {
+                    puts("NOP");
                     handle_eof();
+                }
 
             } while (c != '\n');
 
@@ -350,6 +353,7 @@ int uci_main(int argc, char *argv[])
     char token[MAX_UCICMD_LEN];
     std::size_t i = 0;
 
+    running = true;
 
     //this loop, parses only the first word of a command,
     //e.g. on the string "hello world\n", this loop will stop at "hello"
@@ -360,7 +364,7 @@ int uci_main(int argc, char *argv[])
     //return back to the loop, where the next token will be read from the line (if
     //there is one) and the process will repeat. If the rest of the line is just
     //whitespace characters, it will be ignored.
-    while (1) {
+    while (running) {
 
         c = std::fgetc(stdin);
 
@@ -425,6 +429,7 @@ int uci_main(int argc, char *argv[])
 
     }
 
-    //unreachable
+    LOG("Quitting!");
+
     return 0;
 }
