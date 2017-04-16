@@ -25,6 +25,7 @@ SOFTWARE.
 #include "eval.h"
 #include "move.h"
 #include "position.h"
+#include "search.h"
 
 #define MAX_PLY (64)
 #define INF     (30000)

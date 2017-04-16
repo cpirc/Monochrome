@@ -26,7 +26,15 @@ SOFTWARE.
 #define SEARCH_H
 
 #include "position.h"
+#include "move.h"
 
 extern Move start_search(Position& pos);
+
+struct SearchController {
+    std::uint32_t moves_per_session;
+    std::uint64_t increment;
+    std::uint64_t search_start_time;
+    std::uint64_t search_end_time;
+};
 
 #endif
