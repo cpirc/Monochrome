@@ -207,15 +207,15 @@ void set_stats(SearchStack* ss, Stats& stats)
 }
 
 /* Start searching a position and return the best move */
-Move start_search(Position& pos)
+Move start_search(SearchController& sc)
 {
     Stats stats;
     clear_stats(stats);
     SearchStack ss[MAX_PLY];
     clear_ss(ss, MAX_PLY);
     set_stats(ss, stats);
-    for (int depth = 1; depth < MAX_PLY; ++depth) {
-        int score = search(pos, depth, -INF, +INF, ss);
+    for (int depth = 1; depth < sc.max_depth; ++depth) {
+        int score = search(sc.pos, depth, -INF, +INF, ss);
         printf("nodes %" PRIu64 " depth %d, score %d\n", ss->stats->node_count, depth, score);
     }
     Move move = 0;
