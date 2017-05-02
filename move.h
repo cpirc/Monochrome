@@ -97,6 +97,13 @@ inline Move get_move(Square from, Square to, MoveType move_type, PromotionType p
     return Move(from | (to << TO_SQ_SHIFT) | move_type | prom_type);
 }
 
+/* Flip the move by flipping the to and from squares */
+inline Move flip_move(Move const move)
+{
+    return get_move(Square(from_square(move) ^ 56), Square(to_square(move) ^ 56),
+                    MoveType(MOVE_TYPE_MASK & move), PromotionType(PROM_TYPE_MASK & move));
+}
+
 extern void make_move(Position& pos, const Move move);
 extern int generate(const Position& pos, Move* ml);
 extern int generate_captures(const Position& pos, Move* ml);

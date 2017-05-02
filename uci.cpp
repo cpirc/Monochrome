@@ -266,9 +266,7 @@ void handle_position_fen()
         }
     }
 
-    if (opt.newgame) {
-        parse_fen_to_position(s, sc.pos);
-    }
+    parse_fen_to_position(s, sc.pos);
 
     handle_position_moves();
 }
@@ -334,122 +332,59 @@ void handle_position_moves()
 
     i = 0;
 
-    if (opt.newgame) {
+    while (1) {
 
-        opt.newgame = false;
+        if (c == EOF) {
 
-        if (!skip_ucinewgame_check && !ucinewgame_support) {
-            LOG("GUI doesn't support ucinewgame command");
-            skip_ucinewgame_check = true;
-        }
+            handle_eof();
 
-        parse_fen_to_position("rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", sc.pos);
+        } else if (std::isspace(c)) {
 
-        while (1) {
+            if (i) {
 
-            if (c == EOF) {
-
-                handle_eof();
-
-            } else if (std::isspace(c)) {
-
-                if (i) {
-
-                    s[i] = 0;
-                    i = 0;
-
-                    if (!lan_to_move(s, move)) {
-                        LOG("Unrecognized token : \"%s\"", s);
-                        opt.newgame = true;
-                        return;
-                    }
-
-                    make_move(sc.pos, move);
-
-                }
-
-                if (c == '\n') {
-                    break;
-                }
-
-            } else {
-
-                if (i >= 5) {
-                    s[5] = 0;
-
-                    LOG("Token \"%s...\" exceeds max token length", s);
+                if (!lan_to_move(s, move)) {
+                    LOG("Unrecognized token : \"%s\"", s);
+                    opt.newgame = true;
                     return;
                 }
 
-                s[i++] = (char)c;
+                if (sc.pos.flipped)
+                    move = flip_move(move);
+
+                make_move(sc.pos, move);
+
+                //////////////////////////////////////
+                printf("Positions of our pieces:\n");
+                PRINT_BITBOARD(sc.pos.colours[US]);
+
+                printf("Positions of their pieces:\n");
+                PRINT_BITBOARD(sc.pos.colours[THEM]);
+                //print_position_struct(sc.pos);
+                //////////////////////////////////////
+
+                s[i] = 0;
+                i = 0;
 
             }
 
-            c = std::fgetc(stdin);
-        }
-
-        //////////////////////////////////////
-        printf("Positions of our pieces:\n");
-        PRINT_BITBOARD(sc.pos.colours[US]);
-
-        printf("Positions of their pieces:\n");
-        PRINT_BITBOARD(sc.pos.colours[THEM]);
-        //print_position_struct(sc.pos);
-        //////////////////////////////////////
-
-    } else {
-
-        while (1) {
-
-            if (c == EOF) {
-
-                handle_eof();
-
-            } else if (std::isspace(c)) {
-
-                if (i) {
-
-                    s[i] = 0;
-                    i = 0;
-
-                }
-
-                if (c == '\n') {
-                    break;
-                }
-
-            } else {
-
-                if (i >= 5) {
-                    s[5] = 0;
-
-                    LOG("Token \"%s...\" exceeds max token length", s);
-                    return;
-                }
-
-                s[i++] = (char)c;
-
+            if (c == '\n') {
+                break;
             }
 
-            c = std::fgetc(stdin);
+        } else {
+
+            if (i >= 5) {
+                s[5] = 0;
+
+                LOG("Token \"%s...\" exceeds max token length", s);
+                return;
+            }
+
+            s[i++] = (char)c;
+
         }
 
-        if (!lan_to_move(s, move)) {
-            LOG("Unrecognized token : \"%s\"", s);
-            opt.newgame = true;
-            return;
-        }
-
-        make_move(sc.pos, move);
-
-        //////////////////////////////////////
-        printf("Positions of our pieces:\n");
-        PRINT_BITBOARD(sc.pos.colours[US]);
-
-        printf("Positions of their pieces:\n");
-        PRINT_BITBOARD(sc.pos.colours[THEM]);
-        //print_position_struct(sc.pos);
-        //////////////////////////////////////
+        c = std::fgetc(stdin);
     }
 }
 
@@ -484,6 +419,7 @@ void handle_position()
                     handle_position_fen();
                 } else if (!std::strcmp(s, "startpos")) {
                     LOG("lan format");
+                    parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", sc.pos);
                     handle_position_moves();
                 } else {
                     LOG("Unrecognized token : \"%s\"", s);

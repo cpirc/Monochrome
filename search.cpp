@@ -214,7 +214,7 @@ Move start_search(SearchController& sc)
     SearchStack ss[MAX_PLY];
     clear_ss(ss, MAX_PLY);
     set_stats(ss, stats);
-    for (int depth = 1; depth < sc.max_depth; ++depth) {
+    for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
         int score = search(sc.pos, depth, -INF, +INF, ss);
         printf("nodes %" PRIu64 " depth %d, score %d\n", ss->stats->node_count, depth, score);
     }
