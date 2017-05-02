@@ -154,7 +154,7 @@ void run_move_to_lan_tests(void)
     printf("%s\n", str);
 }
 
-void lan_to_move(const char* lan_str, Move& move)
+bool lan_to_move(const char* lan_str, Move& move)
 {
     Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
              to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
@@ -177,5 +177,9 @@ void lan_to_move(const char* lan_str, Move& move)
             move = get_move(from, to, NORMAL);
             break;
         }
+
+        return true;
     }
+
+    return false;
 }

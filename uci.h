@@ -25,7 +25,6 @@ SOFTWARE.
 #ifndef UCI_H
 #define UCI_H
 
-extern bool getline_auto(FILE *fd, char *buff, std::size_t buff_len);
 extern int uci_main(int argc, char *argv[]);
 
 

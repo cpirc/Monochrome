@@ -25,6 +25,8 @@ SOFTWARE.
 #include "types.h"
 #include "move.h"
 #include "position.h"
+#include "bitboard.h"
+#include "search.h"
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -32,16 +34,15 @@ SOFTWARE.
 #include <cctype> //for std::isspace
 
 
-#define MAX_UCICMD_LEN 11
-
 #define ENABLE_LOGGING //comment this line out to disable log messages
 
 #ifdef ENABLE_LOGGING
 # define LOG(fmt, ...) \
     do { \
-        std::printf("=== "); \
+        std::printf("info debug "); \
         std::printf(fmt, ##__VA_ARGS__); \
-        std::printf(" ===\n"); \
+        std::printf("\n"); \
+        std::fflush(stdout); \
     } while (0)
 #else
 # define LOG(fmt, ...)
@@ -49,34 +50,43 @@ SOFTWARE.
 
 
 struct EngineOptions {
+    bool newgame;
     bool debug;
     bool registration;
     /* ... */
 } opt = {
+    .newgame = true, //is true if the ucinewgame command was just sent or at the start of the first game
     .debug = false, //debugging is turned off, by default
     .registration = false //this engine doesn't need registration to fully work
 };
 
-static Position pos;
+static SearchController sc;
 
 //stores the last character that was read from stdin
 //this is a global, because functions need to know the last
 //char in order to do proper line buffering
 static int c;
 
-static bool running;
+static bool running; //while this is true, the game loop is running
+
+//for GUIs that don't support the ucinewgame command
+//we don't have to check if we got it on every game
+static bool skip_ucinewgame_check = false;
+static bool ucinewgame_support = false; //it's possible that a GUI won't support this command
 
 static void handle_eof();
+static void send_cmd(const char *cmd);
 
 static void flush_up_to_char(int upto);
 static void flush_up_to_whitespace();
+static bool flush_whitespace();
 
 static void handle_debug();
 static void handle_go();
 
 static void handle_position();
-static void handle_position_startpos();
 static void handle_position_fen();
+static void handle_position_moves();
 
 static void handle_register();
 static void handle_setoption();
@@ -89,42 +99,15 @@ static void handle_simple_commands(char *cmd);
 static bool handle_all_commands(char *cmd);
 
 
-/* reads from the file descriptor fd into the pre-allocated buffer pointed to by buff,
- * until either it hits EOF, '\n', or it reads buff_len - 1 characters.
- * Returns true if it read less than buff_len characters (or if the EOF character was read)
- * false otherwise. */
-bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
-{
-    assert(buff && fd && buff_len);
-
-    std::size_t idx = 0, idx_len = buff_len - 1;
-    int curr;
-    bool ret = true;
-
-    while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n') {
-
-        if (idx == idx_len)
-            break;
-
-        buff[idx++] = (char)curr;
-
-    }
-
-    //flush stdin
-    if (curr != EOF && curr != '\n') {
-        ret = false;
-        while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n');
-    }
-
-    buff[idx] = '\0';
-
-    return ret;
-}
-
 void handle_eof()
 {
     //LOG("Received EOF!");
     std::exit(EXIT_FAILURE);
+}
+
+void send_cmd(const char *cmd)
+{
+    std::puts(cmd);
 }
 
 void flush_up_to_char(int upto)
@@ -149,10 +132,30 @@ void flush_up_to_whitespace()
     } while (!std::isspace(c));
 }
 
+//skips whitespace that isn't the newline character
+//returns true if '\n' was hit
+//false if it wasn't hit
+bool flush_whitespace()
+{
+    do {
+        c = std::fgetc(stdin);
+
+        if (c == EOF)
+            handle_eof();
+
+        if (c == '\n')
+            return false;
+    } while (std::isspace(c));
+
+    return true;
+}
+
 void handle_debug()
 {
+    static const std::size_t MAX_UCICMD_LEN = 4;
+
     std::size_t i = 0;
-    char s[4]; //the debug command can only be followed by
+    char s[MAX_UCICMD_LEN]; //the debug command can only be followed by
     //the strings "on" or "off". s has the length of the biggest
     //allowed string, plus '\0' (size of "off").
 
@@ -197,10 +200,10 @@ void handle_debug()
 
         } else {
 
-            if (i >= 3) {
+            if (i >= (MAX_UCICMD_LEN - 1)) {
                 flush_up_to_char('\n');
 
-                s[3] = 0;
+                s[MAX_UCICMD_LEN - 1] = 0;
 
                 LOG("Token \"%s...\" exceeds max token length", s);
                 break;
@@ -219,18 +222,243 @@ void handle_go()
 
 void handle_position_fen()
 {
-    
+    static const std::size_t MAX_UCICMD_LEN = 128;
+
+    int current_field = 0;
+    bool new_field = false;
+    std::size_t i = 0;
+    char s[MAX_UCICMD_LEN];
+
+    while (current_field < 5) {
+
+        c = std::fgetc(stdin);
+
+        if (c == EOF) {
+
+            handle_eof();
+
+        } else if (std::isspace(c)) {
+
+            if (c == '\n') {
+                LOG("Invalid use of position command");
+                return;
+            }
+
+            new_field = true;
+
+        } else {
+
+            if (i >= (MAX_UCICMD_LEN - 1)) {
+                s[MAX_UCICMD_LEN - 1] = 0;
+
+                LOG("Token \"%s...\" exceeds max token length", s);
+                return;
+            }
+
+            if (new_field) {
+                s[i++] = ' ';
+                new_field = false;
+                current_field++;
+            }
+
+            s[i++] = (char)c;
+
+        }
+    }
+
+    if (opt.newgame) {
+        parse_fen_to_position(s, sc.pos);
+    }
+
+    handle_position_moves();
 }
 
-void handle_position_startpos()
+void handle_position_moves()
 {
-    
+    static const std::size_t MAX_UCICMD_LEN = 9;
+
+    std::size_t i = 0;
+    char s[MAX_UCICMD_LEN];
+    Move move;
+
+    //initially skip all the characters up to the first
+    //character on the first LAN string. e.g.
+    //"position startpos moves e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 b8c6"
+    //                         ^up to this character
+    while (1) {
+
+        c = std::fgetc(stdin);
+
+        if (c == EOF) {
+
+            handle_eof();
+
+        } else if (std::isspace(c)) {
+
+            if (c == '\n') {
+                LOG("Invalid use of position command");
+                return;
+            }
+
+            if (i) {
+
+                s[i] = 0;
+
+                if (!std::strcmp(s, "moves")) {
+                    break;
+                } else {
+                    LOG("Unrecognized token : \"%s\"", s);
+                    return;
+                }
+
+            }
+
+        } else {
+
+            if (i >= (MAX_UCICMD_LEN - 1)) {
+                s[MAX_UCICMD_LEN - 1] = 0;
+
+                LOG("Token \"%s...\" exceeds max token length", s);
+                return;
+            }
+
+            s[i++] = (char)c;
+
+        }
+    }
+
+    if (!flush_whitespace()) {
+        LOG("Invalid use of position command");
+        return;
+    }
+
+    i = 0;
+
+    if (opt.newgame) {
+
+        opt.newgame = false;
+
+        if (!skip_ucinewgame_check && !ucinewgame_support) {
+            LOG("GUI doesn't support ucinewgame command");
+            skip_ucinewgame_check = true;
+        }
+
+        parse_fen_to_position("rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", sc.pos);
+
+        while (1) {
+
+            if (c == EOF) {
+
+                handle_eof();
+
+            } else if (std::isspace(c)) {
+
+                if (i) {
+
+                    s[i] = 0;
+                    i = 0;
+
+                    if (!lan_to_move(s, move)) {
+                        LOG("Unrecognized token : \"%s\"", s);
+                        opt.newgame = true;
+                        return;
+                    }
+
+                    make_move(sc.pos, move);
+
+                }
+
+                if (c == '\n') {
+                    break;
+                }
+
+            } else {
+
+                if (i >= 5) {
+                    s[5] = 0;
+
+                    LOG("Token \"%s...\" exceeds max token length", s);
+                    return;
+                }
+
+                s[i++] = (char)c;
+
+            }
+
+            c = std::fgetc(stdin);
+        }
+
+        //////////////////////////////////////
+        printf("Positions of our pieces:\n");
+        PRINT_BITBOARD(sc.pos.colours[US]);
+
+        printf("Positions of their pieces:\n");
+        PRINT_BITBOARD(sc.pos.colours[THEM]);
+        //print_position_struct(sc.pos);
+        //////////////////////////////////////
+
+    } else {
+
+        while (1) {
+
+            if (c == EOF) {
+
+                handle_eof();
+
+            } else if (std::isspace(c)) {
+
+                if (i) {
+
+                    s[i] = 0;
+                    i = 0;
+
+                }
+
+                if (c == '\n') {
+                    break;
+                }
+
+            } else {
+
+                if (i >= 5) {
+                    s[5] = 0;
+
+                    LOG("Token \"%s...\" exceeds max token length", s);
+                    return;
+                }
+
+                s[i++] = (char)c;
+
+            }
+
+            c = std::fgetc(stdin);
+        }
+
+        if (!lan_to_move(s, move)) {
+            LOG("Unrecognized token : \"%s\"", s);
+            opt.newgame = true;
+            return;
+        }
+
+        make_move(sc.pos, move);
+
+        //////////////////////////////////////
+        printf("Positions of our pieces:\n");
+        PRINT_BITBOARD(sc.pos.colours[US]);
+
+        printf("Positions of their pieces:\n");
+        PRINT_BITBOARD(sc.pos.colours[THEM]);
+        //print_position_struct(sc.pos);
+        //////////////////////////////////////
+    }
 }
 
 void handle_position()
 {
+    static const std::size_t MAX_UCICMD_LEN = 9;
+
     std::size_t i = 0;
-    char s[9];
+    char s[MAX_UCICMD_LEN];
 
     while (1) {
 
@@ -242,6 +470,11 @@ void handle_position()
 
         } else if (std::isspace(c)) {
 
+            if (c == '\n') {
+                LOG("Invalid use of position command");
+                break;
+            }
+
             if (i) {
 
                 s[i] = 0;
@@ -251,7 +484,7 @@ void handle_position()
                     handle_position_fen();
                 } else if (!std::strcmp(s, "startpos")) {
                     LOG("lan format");
-                    handle_position_startpos();
+                    handle_position_moves();
                 } else {
                     LOG("Unrecognized token : \"%s\"", s);
                 }
@@ -266,17 +499,12 @@ void handle_position()
                 break;
             }
 
-            if (c == '\n') {
-                LOG("Invalid use of position command");
-                break;
-            }
-
         } else {
 
-            if (i >= 8) {
+            if (i >= (MAX_UCICMD_LEN - 1)) {
                 flush_up_to_char('\n');
 
-                s[8] = 0;
+                s[MAX_UCICMD_LEN - 1] = 0;
 
                 LOG("Token \"%s...\" exceeds max token length", s);
                 break;
@@ -300,12 +528,15 @@ void handle_setoption()
 
 void handle_isready()
 {
-    std::puts("readyok");
+    send_cmd("readyok");
 }
 
 void handle_ucinewgame()
 {
-    std::memset((void*)&pos, 0, sizeof(Position));
+    //not necessary
+    //std::memset((void*)&sc.pos, 0, sizeof(((SearchController*)0)->pos));
+
+    ucinewgame_support = opt.newgame = true;
 }
 
 void handle_stop()
@@ -328,9 +559,6 @@ void handle_simple_commands(char *cmd)
     if (!std::strcmp(cmd, "isready")) {
         LOG("isready command");
         handle_isready();
-    } else if (!std::strcmp(cmd, "ucinewgame")) {
-        LOG("ucinewgame command");
-        handle_ucinewgame();
     } else if (!std::strcmp(cmd, "stop")) {
         LOG("stop command");
         handle_stop();
@@ -340,6 +568,9 @@ void handle_simple_commands(char *cmd)
     } else if (!std::strcmp(cmd, "quit")) {
         LOG("quit command");
         handle_quit();
+    } else if (!skip_ucinewgame_check && !std::strcmp(cmd, "ucinewgame")) {
+        LOG("ucinewgame command");
+        handle_ucinewgame();
     } else {
         LOG("Unrecognized token : \"%s\"", cmd);
     }
@@ -402,14 +633,15 @@ int uci_main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    std::puts("id name CPirc Chess-Engine");
-    std::puts("id author mkchan ZirconiumX Gikoskos");
+    send_cmd("id name CPirc Chess-Engine");
+    send_cmd("id author mkchan ZirconiumX Gikoskos");
 
     //send options to the GUI here
-    //std::puts("option \n");
+    //send_cmd("option \n");
 
-    std::puts("uciok");
+    send_cmd("uciok");
 
+    static const std::size_t MAX_UCICMD_LEN = 11;
     char token[MAX_UCICMD_LEN];
     std::size_t i = 0;
 
@@ -472,7 +704,7 @@ int uci_main(int argc, char *argv[])
             //than the longest UCI command length (ucinewgame)
             //meaning that it's an invalid command,
             //skip all the characters up to the first whitespace
-            if (i >= MAX_UCICMD_LEN) {
+            if (i >= (MAX_UCICMD_LEN - 1)) {
 
                 i = 0;
 

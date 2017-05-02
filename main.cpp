@@ -24,16 +24,47 @@ SOFTWARE.
 
 #include <cstdio>
 #include <cstring>
+#include <cctype>
+#include <cassert>
 
 #include "bitboard.h"
-#include "move.h"
-#include "position.h"
-#include "types.h"
-#include "misc.h"
-#include "tt.h"
-#include "search.h"
 #include "uci.h"
 
+
+/* reads from the file descriptor fd into the pre-allocated buffer pointed to by buff,
+ * until either it hits EOF, '\n', or it reads buff_len - 1 characters.
+ * Returns true if it read less than buff_len characters (or if the EOF character was read)
+ * false otherwise. */
+bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
+{
+    assert(buff && fd && buff_len);
+
+    std::size_t idx = 0, idx_len = buff_len - 1;
+    int curr;
+    bool ret = true;
+
+    while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n') {
+
+        if (idx == idx_len) {
+            break;
+        }
+
+        if (!std::isblank(curr)) {
+            buff[idx++] = (char)curr;
+        }
+    }
+
+    //flush stdin
+    if (curr != EOF && curr != '\n') {
+        ret = false;
+
+        while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n');
+    }
+
+    buff[idx] = '\0';
+
+    return ret;
+}
 
 /* The start of all things (after _start) */
 int main(int argc, char *argv[])
@@ -42,9 +73,12 @@ int main(int argc, char *argv[])
 
     char protocol[12];
 
+    assert(!std::setvbuf(stdout, NULL, _IONBF, 0));
+    assert(!std::setvbuf(stdin, NULL, _IONBF, 0));
+
     if (getline_auto(stdin, protocol, 12)) {
 
-        if (!std::strcmp(protocol, "uci")) {
+        if (!std::strncmp(protocol, "uci", 3)) {
             return uci_main(argc, argv);
         }
 
