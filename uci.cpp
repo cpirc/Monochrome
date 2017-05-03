@@ -31,6 +31,7 @@ SOFTWARE.
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <cerrno>
 #include <cctype> //for std::isspace
 
 
@@ -42,7 +43,6 @@ SOFTWARE.
         std::printf("info debug "); \
         std::printf(fmt, ##__VA_ARGS__); \
         std::printf("\n"); \
-        std::fflush(stdout); \
     } while (0)
 #else
 # define LOG(fmt, ...)
@@ -50,14 +50,14 @@ SOFTWARE.
 
 
 struct EngineOptions {
-    bool newgame;
     bool debug;
     bool registration;
+    bool infinite;
     /* ... */
 } opt = {
-    .newgame = true, //is true if the ucinewgame command was just sent or at the start of the first game
     .debug = false, //debugging is turned off, by default
-    .registration = false //this engine doesn't need registration to fully work
+    .registration = false, //this engine doesn't need registration to fully work
+    .infinite = false
 };
 
 static SearchController sc;
@@ -69,17 +69,14 @@ static int c;
 
 static bool running; //while this is true, the game loop is running
 
-//for GUIs that don't support the ucinewgame command
-//we don't have to check if we got it on every game
-static bool skip_ucinewgame_check = false;
-static bool ucinewgame_support = false; //it's possible that a GUI won't support this command
-
 static void handle_eof();
 static void send_cmd(const char *cmd);
 
 static void flush_up_to_char(int upto);
 static void flush_up_to_whitespace();
 static bool flush_whitespace();
+
+static bool read_next_ulong(unsigned long &x);
 
 static void handle_debug();
 static void handle_go();
@@ -130,6 +127,48 @@ void flush_up_to_whitespace()
             handle_eof();
 
     } while (!std::isspace(c));
+}
+
+bool read_next_ulong(unsigned long &x)
+{
+    static const std::size_t arr_size = 20;
+
+    if (!flush_whitespace()) {
+        return false;
+    }
+
+    std::size_t i = 0;
+    char ul_str[arr_size];
+
+    do {
+
+        if (i >= arr_size - 1) {
+            flush_up_to_whitespace();
+            return false;
+        }
+
+        if (!std::isdigit(c)) {
+            flush_up_to_whitespace();
+            return false;
+        }
+
+        ul_str[i++] = (char)c;
+
+        c = std::fgetc(stdin);
+
+    } while (!std::isspace(c));
+
+    ul_str[i] = '\0';
+
+    errno = 0;
+    x = std::strtoul(ul_str, NULL, 10);
+    if (errno) {
+        int err = errno;
+        LOG("strtoul failed with error %s", strerror(err));
+        return false;
+    }
+
+    return true;
 }
 
 //skips whitespace that isn't the newline character
@@ -217,7 +256,152 @@ void handle_debug()
 
 void handle_go()
 {
-    flush_up_to_char('\n');
+    static const std::size_t MAX_UCICMD_LEN = 12;
+
+    std::size_t i = 0;
+    char s[MAX_UCICMD_LEN];
+    unsigned long tmp;
+
+    /**/
+    sc.max_depth = 0;
+    sc.moves_per_session = 0;
+    sc.increment = 0;
+    sc.search_start_time = 0;
+    sc.search_end_time = 0;
+
+    while (1) {
+
+        c = std::fgetc(stdin);
+
+        if (c == EOF) {
+
+            handle_eof();
+
+        } else if (std::isspace(c)) {
+
+            if (i) {
+
+                s[i] = 0;
+                i = 0;
+
+                if (!std::strcmp(s, "ponder")) {
+                    LOG("ponder command");
+                } else if (!std::strcmp(s, "searchmoves")) {
+                    LOG("searchmoves command");
+                } else if (!std::strcmp(s, "wtime")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of wtime command");
+                    } else {
+                        LOG("wtime = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "btime")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of btime command");
+                    } else {
+                        LOG("btime = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "winc")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of winc command");
+                    } else {
+                        LOG("winc = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "binc")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of binc command");
+                    } else {
+                        LOG("binc = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "movestogo")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of movestogo command");
+                    } else {
+                        LOG("movestogo = %lu", tmp);
+                        sc.moves_per_session = (std::uint32_t)tmp;
+                    }
+
+                } else if (!std::strcmp(s, "depth")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of depth command");
+                    } else {
+                        LOG("depth = %lu", tmp);
+                        sc.max_depth = (std::uint32_t)tmp;
+                    }
+
+                } else if (!std::strcmp(s, "nodes")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of nodes command");
+                    } else {
+                        LOG("nodes = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "mate")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of mate command");
+                    } else {
+                        LOG("mate = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "movetime")) {
+
+                    if (!read_next_ulong(tmp)) {
+                        LOG("Incorrect use of movetime command");
+                    } else {
+                        LOG("movetime = %lu", tmp);
+                        /* = tmp;*/
+                    }
+
+                } else if (!std::strcmp(s, "infinite")) {
+                    LOG("infinite command");
+                } else {
+                    LOG("Unrecognized token : \"%s\"", s);
+                }
+
+            }
+
+            if (c == '\n') {
+                break;
+            }
+
+        } else {
+
+            if (i >= (MAX_UCICMD_LEN - 1)) {
+                i = 0;
+                s[MAX_UCICMD_LEN - 1] = 0;
+                LOG("Token \"%s...\" exceeds max token length", s);
+
+                flush_up_to_whitespace();
+
+                if (c == '\n')
+                    break;
+                else
+                    continue;
+            }
+
+            s[i++] = (char)c;
+
+        }
+    }
+
+    start_search(sc);
 }
 
 void handle_position_fen()
@@ -344,7 +528,6 @@ void handle_position_moves()
 
                 if (!lan_to_move(s, move)) {
                     LOG("Unrecognized token : \"%s\"", s);
-                    opt.newgame = true;
                     return;
                 }
 
@@ -353,14 +536,13 @@ void handle_position_moves()
 
                 make_move(sc.pos, move);
 
-                //////////////////////////////////////
+                /*
                 printf("Positions of our pieces:\n");
                 PRINT_BITBOARD(sc.pos.colours[US]);
 
                 printf("Positions of their pieces:\n");
                 PRINT_BITBOARD(sc.pos.colours[THEM]);
-                //print_position_struct(sc.pos);
-                //////////////////////////////////////
+                */
 
                 s[i] = 0;
                 i = 0;
@@ -471,8 +653,6 @@ void handle_ucinewgame()
 {
     //not necessary
     //std::memset((void*)&sc.pos, 0, sizeof(((SearchController*)0)->pos));
-
-    ucinewgame_support = opt.newgame = true;
 }
 
 void handle_stop()
@@ -504,7 +684,7 @@ void handle_simple_commands(char *cmd)
     } else if (!std::strcmp(cmd, "quit")) {
         LOG("quit command");
         handle_quit();
-    } else if (!skip_ucinewgame_check && !std::strcmp(cmd, "ucinewgame")) {
+    } else if (!std::strcmp(cmd, "ucinewgame")) {
         LOG("ucinewgame command");
         handle_ucinewgame();
     } else {
