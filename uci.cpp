@@ -36,6 +36,7 @@ SOFTWARE.
 
 
 #define ENABLE_LOGGING //comment this line out to disable log messages
+#define SEARCH_MOVES_MAX 256
 
 #ifdef ENABLE_LOGGING
 # define LOG(fmt, ...) \
@@ -61,6 +62,8 @@ struct EngineOptions {
 };
 
 static SearchController sc;
+static Move sm[SEARCH_MOVES_MAX]; //search moves
+static unsigned int sm_total; //total number of search moves
 
 //stores the last character that was read from stdin
 //this is a global, because functions need to know the last
@@ -76,9 +79,10 @@ static void flush_up_to_char(int upto);
 static void flush_up_to_whitespace();
 static bool flush_whitespace();
 
-static bool read_next_ulong(unsigned long &x);
+static bool read_next_ulong(unsigned long long &x);
 
 static void handle_debug();
+static void handle_go_searchmoves(char* s);
 static void handle_go();
 
 static void handle_position();
@@ -129,9 +133,9 @@ void flush_up_to_whitespace()
     } while (!std::isspace(c));
 }
 
-bool read_next_ulong(unsigned long &x)
+bool read_next_ulong(unsigned long long &x)
 {
-    static const std::size_t arr_size = 20;
+    static const std::size_t arr_size = 40;
 
     if (!flush_whitespace()) {
         return false;
@@ -161,10 +165,10 @@ bool read_next_ulong(unsigned long &x)
     ul_str[i] = '\0';
 
     errno = 0;
-    x = std::strtoul(ul_str, NULL, 10);
+    x = std::strtoull(ul_str, NULL, 10);
     if (errno) {
         int err = errno;
-        LOG("strtoul failed with error %s", strerror(err));
+        LOG("strtoull failed with error \"%s\"", strerror(err));
         return false;
     }
 
@@ -254,20 +258,77 @@ void handle_debug()
     }
 }
 
+void handle_go_searchmoves(char* s)
+{
+    static const std::size_t MAX_UCICMD_LEN = 6;
+
+    std::size_t i = 0;
+    Move m;
+
+    while (1) {
+
+        c = std::fgetc(stdin);
+
+        if (c == EOF) {
+
+            handle_eof();
+
+        } else if (std::isspace(c)) {
+
+            if (i) {
+
+                if (sm_total >= SEARCH_MOVES_MAX) {
+                    break;
+                }
+
+                s[i] = 0;
+                i = 0;
+
+                if (!lan_to_move(s, m)) {
+                    break;
+                }
+
+                LOG("searchmoves[%u] : %s", sm_total, s);
+                sm[sm_total++] = m;
+            }
+
+            if (c == '\n') {
+                break;
+            }
+
+        } else {
+
+            if (i >= (MAX_UCICMD_LEN - 1)) {
+
+                s[MAX_UCICMD_LEN - 1] = 0;
+
+                break;
+            }
+
+            s[i++] = (char)c;
+
+        }
+    }
+
+    LOG("total searchmoves : %u", sm_total);
+}
+
 void handle_go()
 {
     static const std::size_t MAX_UCICMD_LEN = 12;
 
     std::size_t i = 0;
     char s[MAX_UCICMD_LEN];
-    unsigned long tmp;
+    unsigned long long tmp;
 
     /**/
-    sc.max_depth = 0;
+    sc.max_depth = MAX_PLY;
     sc.moves_per_session = 0;
     sc.increment = 0;
     sc.search_start_time = 0;
     sc.search_end_time = 0;
+
+    sm_total = 0;
 
     while (1) {
 
@@ -284,16 +345,21 @@ void handle_go()
                 s[i] = 0;
                 i = 0;
 
+                if (!std::strcmp(s, "searchmoves")) {
+
+                    LOG("searchmoves command");
+                    handle_go_searchmoves(s);
+
+                }
+
                 if (!std::strcmp(s, "ponder")) {
                     LOG("ponder command");
-                } else if (!std::strcmp(s, "searchmoves")) {
-                    LOG("searchmoves command");
                 } else if (!std::strcmp(s, "wtime")) {
 
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of wtime command");
                     } else {
-                        LOG("wtime = %lu", tmp);
+                        LOG("wtime = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -302,7 +368,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of btime command");
                     } else {
-                        LOG("btime = %lu", tmp);
+                        LOG("btime = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -311,7 +377,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of winc command");
                     } else {
-                        LOG("winc = %lu", tmp);
+                        LOG("winc = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -320,7 +386,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of binc command");
                     } else {
-                        LOG("binc = %lu", tmp);
+                        LOG("binc = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -329,7 +395,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of movestogo command");
                     } else {
-                        LOG("movestogo = %lu", tmp);
+                        LOG("movestogo = %llu", tmp);
                         sc.moves_per_session = (std::uint32_t)tmp;
                     }
 
@@ -338,7 +404,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of depth command");
                     } else {
-                        LOG("depth = %lu", tmp);
+                        LOG("depth = %llu", tmp);
                         sc.max_depth = (std::uint32_t)tmp;
                     }
 
@@ -347,7 +413,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of nodes command");
                     } else {
-                        LOG("nodes = %lu", tmp);
+                        LOG("nodes = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -356,7 +422,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of mate command");
                     } else {
-                        LOG("mate = %lu", tmp);
+                        LOG("mate = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -365,7 +431,7 @@ void handle_go()
                     if (!read_next_ulong(tmp)) {
                         LOG("Incorrect use of movetime command");
                     } else {
-                        LOG("movetime = %lu", tmp);
+                        LOG("movetime = %llu", tmp);
                         /* = tmp;*/
                     }
 
@@ -401,7 +467,7 @@ void handle_go()
         }
     }
 
-    start_search(sc);
+    //start_search(sc);
 }
 
 void handle_position_fen()

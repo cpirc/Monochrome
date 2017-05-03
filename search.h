@@ -28,6 +28,8 @@ SOFTWARE.
 #include "position.h"
 #include "move.h"
 
+#define MAX_PLY (64)
+
 struct SearchController {
     Position pos;
     std::uint32_t max_depth;

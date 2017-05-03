@@ -156,30 +156,33 @@ void run_move_to_lan_tests(void)
 
 bool lan_to_move(const char* lan_str, Move& move)
 {
+    if (lan_str[0] < 'a' || lan_str[0] > 'h' ||
+        lan_str[2] < 'a' || lan_str[2] > 'h' ||
+        lan_str[1] < '1' || lan_str[1] > '8' ||
+        lan_str[3] < '1' || lan_str[3] > '8') {
+        return false;
+    }
+
     Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
              to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
 
-    if (from < INVALID_SQUARE && to < INVALID_SQUARE) {
-        switch (lan_str[4]) {
-        case 'n':
-            move = get_move(from, to, PROMOTION, TO_KNIGHT);
-            break;
-        case 'b':
-            move = get_move(from, to, PROMOTION, TO_BISHOP);
-            break;
-        case 'r':
-            move = get_move(from, to, PROMOTION, TO_ROOK);
-            break;
-        case 'q':
-            move = get_move(from, to, PROMOTION, TO_QUEEN);
-            break;
-        default:
-            move = get_move(from, to, NORMAL);
-            break;
-        }
-
-        return true;
+    switch (lan_str[4]) {
+    case 'n':
+        move = get_move(from, to, PROMOTION, TO_KNIGHT);
+        break;
+    case 'b':
+        move = get_move(from, to, PROMOTION, TO_BISHOP);
+        break;
+    case 'r':
+        move = get_move(from, to, PROMOTION, TO_ROOK);
+        break;
+    case 'q':
+        move = get_move(from, to, PROMOTION, TO_QUEEN);
+        break;
+    default:
+        move = get_move(from, to, NORMAL);
+        break;
     }
 
-    return false;
+    return true;
 }
