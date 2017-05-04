@@ -83,7 +83,6 @@ static bool read_next_ulong(unsigned long long &x);
 
 static void handle_debug();
 
-static void handle_go_searchmoves(char* s, std::size_t& i);
 static void handle_go();
 
 static void handle_position();
@@ -259,57 +258,6 @@ void handle_debug()
     }
 }
 
-void handle_go_searchmoves(char* s, std::size_t& i)
-{
-    Move m;
-
-    while (1) {
-
-        c = std::fgetc(stdin);
-
-        if (c == EOF) {
-
-            handle_eof();
-
-        } else if (std::isspace(c)) {
-
-            if (i) {
-
-                if (sm_total >= SEARCH_MOVES_MAX) {
-                    break;
-                }
-
-                s[i] = 0;
-                i = 0;
-
-                if (!lan_to_move(s, m)) {
-                    break;
-                }
-
-                LOG("searchmoves[%u] : %s", sm_total, s);
-                sm[sm_total++] = m;
-
-            }
-
-            if (c == '\n') {
-                i = 0;
-                break;
-            }
-
-        } else {
-
-            s[i++] = (char)c;
-
-            if (i >= 6) {
-                break;
-            }
-
-        }
-    }
-
-    LOG("total searchmoves : %u", sm_total);
-}
-
 void handle_go()
 {
     static const std::size_t MAX_UCICMD_LEN = 12;
@@ -317,6 +265,8 @@ void handle_go()
     std::size_t i = 0;
     char s[MAX_UCICMD_LEN];
     unsigned long long tmp;
+    Move m;
+    bool parse_searchmoves = false;
 
     sc.max_depth = MAX_PLY;
     sc.moves_per_session = 0;
@@ -339,24 +289,43 @@ void handle_go()
             if (i) {
 
                 s[i] = 0;
-                i = 0;
+
+                if (parse_searchmoves) {
+
+                    if ((i <= 5) && (sm_total < SEARCH_MOVES_MAX) && lan_to_move(s, m)) {
+
+                        LOG("searchmoves[%u] : %s", sm_total, s);
+
+                        sm[sm_total++] = m;
+
+                        if (c == '\n') {
+                            LOG("total searchmoves : %u", sm_total);
+                            break;
+                        }
+
+                        i = 0;
+
+                        continue;
+
+                    }
+
+                    parse_searchmoves = false;
+                    LOG("total searchmoves : %u", sm_total);
+
+                }
 
                 if (!std::strcmp(s, "searchmoves")) {
 
                     LOG("searchmoves command");
 
-                    handle_go_searchmoves(s, i);
-
-                    //if searchmoves didn't hit a white-space
-                    //character, then the token wasn't fully parsed
-                    //and we have to keep parsing the word
-                    if (i) {
-                        continue;
+                    if (c == '\n') {
+                        LOG("Incorrect use of searchmoves command");
+                        break;
+                    } else {
+                        parse_searchmoves = true;
                     }
 
-                }
-
-                if (!std::strcmp(s, "ponder")) {
+                } else if (!std::strcmp(s, "ponder")) {
                     LOG("ponder command");
                 } else if (!std::strcmp(s, "wtime")) {
 
@@ -445,6 +414,7 @@ void handle_go()
                     LOG("Unrecognized token : \"%s\"", s);
                 }
 
+                i = 0;
             }
 
             if (c == '\n') {

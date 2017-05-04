@@ -179,9 +179,11 @@ bool lan_to_move(const char* lan_str, Move& move)
     case 'q':
         move = get_move(from, to, PROMOTION, TO_QUEEN);
         break;
-    default:
+    case '\0':
         move = get_move(from, to, NORMAL);
         break;
+    default:
+        return false;
     }
 
     return true;

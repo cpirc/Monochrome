@@ -38,9 +38,13 @@ const int piecevals[7] = {
 template<Piece p = PAWN>
 int evaluate_material(const Position& pos)
 {
-    std::uint64_t pieces = get_piece(pos, p, US);
+    if (p < (sizeof(piecevals) / sizeof(piecevals[0]))) {
+        std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * piecevals[p]) + (p == QUEEN ? 0 : evaluate_material<p+1>(pos));
+        return (popcnt(pieces) * piecevals[p]) + (p == QUEEN ? 0 : evaluate_material<p+1>(pos));
+    }
+
+    return 0;
 }
 
 /* Return the heuristic value of a position. */
