@@ -299,7 +299,6 @@ void handle_go()
                         sm[sm_total++] = m;
 
                         if (c == '\n') {
-                            LOG("total searchmoves : %u", sm_total);
                             break;
                         }
 
@@ -310,8 +309,6 @@ void handle_go()
                     }
 
                     parse_searchmoves = false;
-                    LOG("total searchmoves : %u", sm_total);
-
                 }
 
                 if (!std::strcmp(s, "searchmoves")) {
@@ -424,6 +421,7 @@ void handle_go()
         } else {
 
             if (i >= (MAX_UCICMD_LEN - 1)) {
+                parse_searchmoves = false;
                 i = 0;
                 s[MAX_UCICMD_LEN - 1] = 0;
                 LOG("Token \"%s...\" exceeds max token length", s);
