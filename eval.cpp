@@ -36,15 +36,15 @@ const int piecevals[7] = {
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
 template<Piece p = PAWN>
-int evaluate_material(const Position& pos)
+inline int evaluate_material(const Position& pos)
 {
-    if (p < (sizeof(piecevals) / sizeof(piecevals[0]))) {
-        std::uint64_t pieces = get_piece(pos, p, US);
+    return popcnt(get_piece(pos, p, US)) * piecevals[p] + evaluate_material<p+1>(pos);
+}
 
-        return (popcnt(pieces) * piecevals[p]) + (p == QUEEN ? 0 : evaluate_material<p+1>(pos));
-    }
-
-    return 0;
+template<>
+inline int evaluate_material<QUEEN>(const Position& pos)
+{
+    return popcnt(get_piece(pos, QUEEN, US)) * piecevals[QUEEN];
 }
 
 /* Return the heuristic value of a position. */
