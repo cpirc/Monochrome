@@ -52,12 +52,12 @@ SOFTWARE.
 
 struct EngineOptions {
     bool debug;
-    bool registration;
+    //bool registration;
     bool infinite;
     /* ... */
 } opt = {
     .debug = false, //debugging is turned off, by default
-    .registration = false, //this engine doesn't need registration to fully work
+    /*.registration = false, //this engine doesn't need registration to fully work*/
     .infinite = false
 };
 
@@ -82,14 +82,15 @@ static bool flush_whitespace();
 static bool read_next_ulong(unsigned long long &x);
 
 static void handle_debug();
-static void handle_go_searchmoves(char* s);
+
+static void handle_go_searchmoves(char* s, std::size_t& i);
 static void handle_go();
 
 static void handle_position();
 static void handle_position_fen();
 static void handle_position_moves();
 
-static void handle_register();
+//static void handle_register();
 static void handle_setoption();
 static void handle_isready();
 static void handle_ucinewgame();
@@ -137,7 +138,7 @@ bool read_next_ulong(unsigned long long &x)
 {
     static const std::size_t arr_size = 40;
 
-    if (!flush_whitespace()) {
+    if (c == '\n' || !flush_whitespace()) {
         return false;
     }
 
@@ -176,8 +177,8 @@ bool read_next_ulong(unsigned long long &x)
 }
 
 //skips whitespace that isn't the newline character
-//returns true if '\n' was hit
-//false if it wasn't hit
+//returns false if '\n' was hit
+//true if it wasn't hit
 bool flush_whitespace()
 {
     do {
@@ -258,11 +259,8 @@ void handle_debug()
     }
 }
 
-void handle_go_searchmoves(char* s)
+void handle_go_searchmoves(char* s, std::size_t& i)
 {
-    static const std::size_t MAX_UCICMD_LEN = 6;
-
-    std::size_t i = 0;
     Move m;
 
     while (1) {
@@ -290,22 +288,21 @@ void handle_go_searchmoves(char* s)
 
                 LOG("searchmoves[%u] : %s", sm_total, s);
                 sm[sm_total++] = m;
+
             }
 
             if (c == '\n') {
+                i = 0;
                 break;
             }
 
         } else {
 
-            if (i >= (MAX_UCICMD_LEN - 1)) {
+            s[i++] = (char)c;
 
-                s[MAX_UCICMD_LEN - 1] = 0;
-
+            if (i >= 6) {
                 break;
             }
-
-            s[i++] = (char)c;
 
         }
     }
@@ -321,7 +318,6 @@ void handle_go()
     char s[MAX_UCICMD_LEN];
     unsigned long long tmp;
 
-    /**/
     sc.max_depth = MAX_PLY;
     sc.moves_per_session = 0;
     sc.increment = 0;
@@ -348,7 +344,15 @@ void handle_go()
                 if (!std::strcmp(s, "searchmoves")) {
 
                     LOG("searchmoves command");
-                    handle_go_searchmoves(s);
+
+                    handle_go_searchmoves(s, i);
+
+                    //if searchmoves didn't hit a white-space
+                    //character, then the token wasn't fully parsed
+                    //and we have to keep parsing the word
+                    if (i) {
+                        continue;
+                    }
 
                 }
 
@@ -700,10 +704,10 @@ void handle_position()
     }
 }
 
-void handle_register()
+/*void handle_register()
 {
     flush_up_to_char('\n');
-}
+}*/
 
 void handle_setoption()
 {
@@ -773,10 +777,10 @@ bool handle_all_commands(char *cmd)
     } else if (!std::strcmp(cmd, "position")) {
         LOG("position command");
         handle_position();
-    } else if (opt.registration && !std::strcmp(cmd, "register")) {
+    } /*else if (opt.registration && !std::strcmp(cmd, "register")) {
         LOG("register command");
         handle_register();
-    } else if (!std::strcmp(cmd, "setoption")) {
+    }*/ else if (!std::strcmp(cmd, "setoption")) {
         LOG("setoption command");
         handle_setoption();
     } else {
