@@ -315,15 +315,12 @@ void handle_go()
 
                     LOG("searchmoves command");
 
-                    if (c == '\n') {
-                        LOG("Incorrect use of searchmoves command");
-                        break;
-                    } else {
-                        parse_searchmoves = true;
-                    }
+                    parse_searchmoves = true;
 
                 } else if (!std::strcmp(s, "ponder")) {
+
                     LOG("ponder command");
+
                 } else if (!std::strcmp(s, "wtime")) {
 
                     if (!read_next_ulong(tmp)) {
