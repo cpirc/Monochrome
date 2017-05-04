@@ -498,6 +498,10 @@ void handle_position_moves()
     char s[MAX_UCICMD_LEN];
     Move move;
 
+    if (c == '\n') {
+        return;
+    }
+
     //initially skip all the characters up to the first
     //character on the first LAN string. e.g.
     //"position startpos moves e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 b8c6"
@@ -513,7 +517,6 @@ void handle_position_moves()
         } else if (std::isspace(c)) {
 
             if (c == '\n') {
-                LOG("Invalid use of position command");
                 return;
             }
 
@@ -622,11 +625,6 @@ void handle_position()
 
         } else if (std::isspace(c)) {
 
-            if (c == '\n') {
-                LOG("Invalid use of position command");
-                break;
-            }
-
             if (i) {
 
                 s[i] = 0;
@@ -649,6 +647,11 @@ void handle_position()
                     flush_up_to_char('\n');
                 }
 
+                break;
+            }
+
+            if (c == '\n') {
+                LOG("Invalid use of position command");
                 break;
             }
 
