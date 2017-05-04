@@ -55,12 +55,16 @@ extern void run_fen_parser_tests();
 template<Piece piece = PAWN>
 inline Piece get_piece_on_square(const Position& pos, const std::uint64_t sq)
 {
-    if (piece < (sizeof(pos.pieces) / sizeof(pos.pieces[0]))) {
-        if (pos.pieces[piece] & sq)
-            return piece;
-        return (piece == KING) ? NO_PIECE : get_piece_on_square<piece+1>(pos, sq);
-    }
+    if (pos.pieces[piece] & sq)
+        return piece;
+    return get_piece_on_square<piece+1>(pos, sq);
+}
 
+template<>
+inline Piece get_piece_on_square<KING>(const Position& pos, const std::uint64_t sq)
+{
+    if (pos.pieces[KING] & sq)
+        return KING;
     return NO_PIECE;
 }
 
