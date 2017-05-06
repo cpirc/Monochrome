@@ -37,6 +37,7 @@ struct SearchController {
     std::uint64_t increment;
     std::uint64_t search_start_time;
     std::uint64_t search_end_time;
+    std::uint64_t our_clock;
 };
 extern Move start_search(SearchController& sc);
 

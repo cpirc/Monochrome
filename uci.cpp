@@ -327,7 +327,9 @@ void handle_go()
                         LOG("Incorrect use of wtime command");
                     } else {
                         LOG("wtime = %llu", tmp);
-                        /* = tmp;*/
+
+                        if (!sc.pos.flipped)
+                           sc.our_clock = tmp;
                     }
 
                 } else if (!std::strcmp(s, "btime")) {
@@ -336,7 +338,9 @@ void handle_go()
                         LOG("Incorrect use of btime command");
                     } else {
                         LOG("btime = %llu", tmp);
-                        /* = tmp;*/
+
+                        if (sc.pos.flipped)
+                           sc.our_clock = tmp;
                     }
 
                 } else if (!std::strcmp(s, "winc")) {
@@ -345,7 +349,9 @@ void handle_go()
                         LOG("Incorrect use of winc command");
                     } else {
                         LOG("winc = %llu", tmp);
-                        /* = tmp;*/
+
+                        if (!sc.pos.flipped)
+                           sc.increment = tmp;
                     }
 
                 } else if (!std::strcmp(s, "binc")) {
@@ -354,7 +360,9 @@ void handle_go()
                         LOG("Incorrect use of binc command");
                     } else {
                         LOG("binc = %llu", tmp);
-                        /* = tmp;*/
+
+                        if (sc.pos.flipped)
+                           sc.increment = tmp;
                     }
 
                 } else if (!std::strcmp(s, "movestogo")) {
@@ -436,7 +444,7 @@ void handle_go()
         }
     }
 
-    //start_search(sc);
+    start_search(sc);
 }
 
 void handle_position_fen()
