@@ -33,6 +33,7 @@ SOFTWARE.
 #include <cassert>
 #include <cerrno>
 #include <cctype> //for std::isspace
+#include <thread> //for thread
 
 
 #define ENABLE_LOGGING //comment this line out to disable log messages
@@ -292,7 +293,7 @@ void handle_go()
 
                 if (parse_searchmoves) {
 
-                    if ((i <= 5) && (sm_total < SEARCH_MOVES_MAX) && lan_to_move(s, m)) {
+                    if ((i <= 5) && (sm_total < SEARCH_MOVES_MAX) && lan_to_move(sc.pos, s, m)) {
 
                         LOG("searchmoves[%u] : %s", sm_total, s);
 
@@ -444,7 +445,8 @@ void handle_go()
         }
     }
 
-    start_search(sc);
+    std::thread search(search_thread, &sc);
+    search.detach();
 }
 
 void handle_position_fen()
@@ -572,7 +574,7 @@ void handle_position_moves()
 
             if (i) {
 
-                if (!lan_to_move(s, move)) {
+                if (!lan_to_move(sc.pos, s, move)) {
                     LOG("Unrecognized token : \"%s\"", s);
                     return;
                 }
@@ -609,6 +611,7 @@ void handle_position_moves()
             }
 
             s[i++] = (char)c;
+            s[i] = '\0';
 
         }
 
@@ -733,6 +736,8 @@ void handle_simple_commands(char *cmd)
     } else if (!std::strcmp(cmd, "ucinewgame")) {
         LOG("ucinewgame command");
         handle_ucinewgame();
+    } else if (!std::strcmp(cmd, "print")) {
+        print_position(sc.pos);
     } else {
         LOG("Unrecognized token : \"%s\"", cmd);
     }
