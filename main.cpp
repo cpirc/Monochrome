@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
 
     char protocol[12];
 
-    assert(!std::setvbuf(stdout, NULL, _IONBF, 0));
-    assert(!std::setvbuf(stdin, NULL, _IONBF, 0));
+    std::setvbuf(stdout, NULL, _IONBF, 0);
+    std::setvbuf(stdin, NULL, _IONBF, 0);
 
     if (getline_auto(stdin, protocol, 12)) {
 
