@@ -408,7 +408,7 @@ void handle_go()
                         LOG("Incorrect use of movetime command");
                     } else {
                         LOG("movetime = %llu", tmp);
-                        /* = tmp;*/
+                        sc.movetime = tmp;
                     }
 
                 } else if (!std::strcmp(s, "infinite")) {

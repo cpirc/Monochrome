@@ -215,7 +215,13 @@ Move start_search(SearchController& sc)
 
     /* Timing */
     sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
-    sc.search_end_time = sc.search_start_time + sc.our_clock/40 + sc.increment;
+    if (sc.movetime) {
+        sc.search_end_time = sc.search_start_time + sc.movetime/2;
+    } else if (sc.moves_per_session) {
+        sc.search_end_time = sc.search_start_time + sc.our_clock/sc.moves_per_session + sc.increment;
+    } else {
+        sc.search_end_time = sc.search_start_time + sc.our_clock/40 + sc.increment;
+    }
 
     char mstr[6];
     Move best_move;
@@ -224,14 +230,13 @@ Move start_search(SearchController& sc)
     /* Iterative deepening */
     for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
 
-        int beta = -INF;
-        int alpha = INF;
+        int beta = INF;
+        int alpha = -INF;
         int depth_best_score = -INF;
         Move depth_best_move = 0;
 
         /* Unroll first depth */
-        int movecount;
-        movecount = generate(sc.pos, ss->ml);
+        int movecount = generate(sc.pos, ss->ml);
 
         Move move;
         while ((move = next_move(ss, movecount))) {
@@ -243,7 +248,7 @@ Move start_search(SearchController& sc)
                 continue;
             }
 
-            int score = -search(sc, npos, depth - 1, beta, alpha, ss + 1);
+            int score = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1);
 
             if (score >= depth_best_score) {
                 depth_best_score = score;

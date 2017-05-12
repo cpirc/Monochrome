@@ -56,6 +56,7 @@ struct SearchController {
     clock_t search_start_time;
     clock_t search_end_time;
     clock_t our_clock;
+    clock_t movetime;
 };
 
 extern void search_thread(void* params);
