@@ -26,6 +26,7 @@ SOFTWARE.
 #include "move.h"
 #include "position.h"
 #include "bitboard.h"
+#include "search.h"
 
 void make_move(Position& pos, const Move move)
 {
@@ -87,6 +88,7 @@ void make_move(Position& pos, const Move move)
         put_piece(pos, to, promotion_type(move), US);
         break;
     default:
+        std::puts("MOVE TYPE ERROR");
         break;
     }
 
@@ -154,37 +156,54 @@ void run_move_to_lan_tests(void)
     printf("%s\n", str);
 }
 
-bool lan_to_move(const char* lan_str, Move& move)
+bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
 {
-    if (lan_str[0] < 'a' || lan_str[0] > 'h' ||
-        lan_str[2] < 'a' || lan_str[2] > 'h' ||
-        lan_str[1] < '1' || lan_str[1] > '8' ||
-        lan_str[3] < '1' || lan_str[3] > '8') {
-        return false;
-    }
-
     Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
              to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
+    Piece promo = NO_PIECE;
 
     switch (lan_str[4]) {
+    case '\0':
+        break;
     case 'n':
-        move = get_move(from, to, PROMOTION, TO_KNIGHT);
+        promo = KNIGHT;
         break;
     case 'b':
-        move = get_move(from, to, PROMOTION, TO_BISHOP);
+        promo = BISHOP;
         break;
     case 'r':
-        move = get_move(from, to, PROMOTION, TO_ROOK);
+        promo = ROOK;
         break;
     case 'q':
-        move = get_move(from, to, PROMOTION, TO_QUEEN);
-        break;
-    case '\0':
-        move = get_move(from, to, NORMAL);
+        promo = QUEEN;
         break;
     default:
-        return false;
+        std::puts("PROMOTION PIECE ERROR");
+        break;
     }
 
-    return true;
+    SearchStack ss[1];
+    clear_ss(ss, 1);
+
+    int movecount;
+    movecount = generate(pos, ss->ml);
+
+    Move current_move;
+    while ((current_move = next_move(ss, movecount))) {
+        if (pos.flipped) {
+            current_move = flip_move(current_move);
+        }
+
+        if (from_square(current_move) == from && to_square(current_move) == to) {
+            // FIX ME: This is very ugly
+            if (promo != NO_PIECE && promotion_type(current_move) != promo) {
+                continue;
+            }
+            move = current_move;
+            return true;
+        }
+    }
+
+    std::puts("MOVE NOT FOUND ERROR");
+    return false;
 }

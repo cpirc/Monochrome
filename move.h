@@ -109,6 +109,6 @@ extern int generate(const Position& pos, Move* ml);
 extern int generate_captures(const Position& pos, Move* ml);
 
 extern void move_to_lan(char* lan_str, const Move move);
-extern bool lan_to_move(const char* lan_str, Move& move);
+extern bool lan_to_move(const Position& pos, const char* lan_str, Move& move);
 extern void run_move_to_lan_tests(void);
 #endif

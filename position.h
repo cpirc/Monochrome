@@ -45,6 +45,7 @@ extern std::uint64_t castle_keys[16];
 extern std::uint64_t piece_sq_keys[2][6][64];
 
 extern void initialize_keys();
+extern void print_position(const Position &pos);
 
 /* Extract data from a FEN string to a Position struct */
 extern void parse_fen_to_position(const char* fen_str, Position& pos);
