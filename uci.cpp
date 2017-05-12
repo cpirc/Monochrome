@@ -717,7 +717,7 @@ void handle_quit()
     running = false;
 }
 
-//seperate handler for single word commands that aren't
+//separate handler for single word commands that aren't
 //bound to be followed by other words (e.g "isready\n", "    \t\t  ucinewgame\n")
 void handle_simple_commands(char *cmd)
 {
@@ -800,7 +800,7 @@ int uci_main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    send_cmd("id name CPirc Chess-Engine");
+    send_cmd("id name Monochrome");
     send_cmd("id author mkchan ZirconiumX Gikoskos");
 
     //send options to the GUI here
