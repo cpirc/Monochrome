@@ -126,7 +126,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     score_moves(pos, ss, movecount);
 
     int legal_moves = 0;
-    Move best_move = 0;
+    Move best_move = 0; // reserved for future use.
 
     Move move;
     while ((move = next_move(ss, movecount))) {
@@ -227,7 +227,7 @@ Move start_search(SearchController& sc)
         int beta = -INF;
         int alpha = INF;
         int depth_best_score = -INF;
-        Move depth_best_move;
+        Move depth_best_move = 0;
 
         /* Unroll first depth */
         int movecount;

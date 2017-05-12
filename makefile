@@ -1,6 +1,6 @@
 CXX = g++
 
-FLAGS = -std=c++11 -Wall -Wextra -pipe
+FLAGS = -pthread -std=c++11 -Wall -Wextra -pipe
 RELEASE_FLAGS = $(FLAGS) -O3 -flto -DNDEBUG
 DEBUG_FLAGS = $(FLAGS) -fno-omit-frame-pointer -g
 
@@ -8,7 +8,7 @@ CXX_FILES = $(wildcard *.cpp)
 HEADERS = $(wildcard *.h)
 
 OBJS = $(patsubst %.cpp,%.o,$(CXX_FILES))
-LINKS =
+LINKS = -pthread -Wl,--no-as-needed
 
 EXEC = engine
 
