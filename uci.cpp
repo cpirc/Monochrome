@@ -274,6 +274,7 @@ void handle_go()
     sc.increment = 0;
     sc.search_start_time = 0;
     sc.search_end_time = 0;
+    sc.movetime = 0;
 
     sm_total = 0;
 

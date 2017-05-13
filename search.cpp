@@ -163,16 +163,11 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             return 0;
     }
 
-    /*
-    if (!ss->ply) {
-        char mstr[6];
-        move_to_lan(mstr, best_move);
-        printf("best move: %s\n", mstr);
 #ifdef TESTING
-        printf("ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
-#endif
+    if (!ss->ply) {
+        printf("info string ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
     }
-    */
+#endif
 
     return alpha;
 }
@@ -215,13 +210,16 @@ Move start_search(SearchController& sc)
 
     /* Timing */
     sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
+
     if (sc.movetime) {
-        sc.search_end_time = sc.search_start_time + sc.movetime/2;
+        sc.search_end_time = sc.movetime/2;
     } else if (sc.moves_per_session) {
-        sc.search_end_time = sc.search_start_time + sc.our_clock/sc.moves_per_session + sc.increment;
+        sc.search_end_time = sc.our_clock/sc.moves_per_session + sc.increment;
     } else {
-        sc.search_end_time = sc.search_start_time + sc.our_clock/40 + sc.increment;
+        sc.search_end_time = sc.our_clock/40 + sc.increment;
     }
+
+    sc.search_end_time += sc.search_start_time;
 
     char mstr[6];
     Move best_move;
@@ -272,7 +270,7 @@ Move start_search(SearchController& sc)
         move_to_lan(mstr, best_move);
 
         // Update info
-        printf("info score cp %i depth %i nodes %" PRIdPTR " time %lu pv %s\n", best_score, depth, stats.node_count, time_used, mstr);
+        printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv %s\n", best_score, depth, stats.node_count, time_used, mstr);
     }
 
     printf("bestmove %s\n", mstr);
