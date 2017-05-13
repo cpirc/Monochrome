@@ -95,9 +95,8 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
     // Update info
     if (ss->stats->node_count%1048576 == 0) {
-        //printf("info nodes %" PRIdPTR "\n", ss->stats->node_count);
         if (current_time > sc.search_start_time) {
-            printf("info nps %" PRIdPTR "\n", 1000*(ss->stats->node_count)/(current_time - sc.search_start_time));
+            printf("info nps %" PRIu64 "\n", 1000*(ss->stats->node_count)/(current_time - sc.search_start_time));
         }
     }
 
