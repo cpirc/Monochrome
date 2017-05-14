@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "position.h"
 
-extern const int piecevals[7];
+extern const int piecevals[2][7];
 
 extern int evaluate(Position& pos);
 
