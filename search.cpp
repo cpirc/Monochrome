@@ -28,26 +28,9 @@ SOFTWARE.
 #include "eval.h"
 #include "move.h"
 #include "position.h"
+#include "search.h"
 
-#define MAX_PLY (64)
 #define INF     (30000)
-
-/* Records search statistics */
-struct Stats {
-    std::uint64_t node_count;
-#ifdef TESTING
-    std::uint64_t fail_highs;
-    std::uint64_t first_move_fail_highs;
-#endif
-};
-
-/* A data structure to pass local parameters thru */
-struct SearchStack {
-    std::uint8_t ply;
-    Move ml[256];
-    int score[256];
-    Stats* stats;
-};
 
 /* MVV/LVA */
 int mvv_lva(const Position& pos, Move m)
@@ -101,10 +84,23 @@ Move next_move(SearchStack* ss, int& size)
 }
 
 /* Alpha-Beta search a position to return a score. */
-int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
+int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss)
 {
     if (ss->ply >= MAX_PLY) {
         return evaluate(pos);
+    }
+
+    // Check time left
+    clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
+    if(current_time >= sc.search_end_time) {
+        return 0;
+    }
+
+    // Update info
+    if (ss->stats->node_count%1048576 == 0) {
+        if (current_time > sc.search_start_time) {
+            printf("info nps %" PRIu64 "\n", 1000*(ss->stats->node_count)/(current_time - sc.search_start_time));
+        }
     }
 
     int movecount, value;
@@ -132,7 +128,7 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
     score_moves(pos, ss, movecount);
 
     int legal_moves = 0;
-    Move best_move = 0;
+    Move best_move = 0; // reserved for future use.
 
     Move move;
     while ((move = next_move(ss, movecount))) {
@@ -146,7 +142,7 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
 
         ++legal_moves;
 
-        value = -search(npos, depth - 1, -beta, -alpha, ss + 1);
+        value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1);
 
         if (value >= beta) {
 #ifdef TESTING
@@ -162,21 +158,18 @@ int search(Position& pos, int depth, int alpha, int beta, SearchStack* ss)
         }
     }
 
-    if (!legal_moves) {
+    if (!legal_moves && !quies) {
         if (in_check)
             return -INF + ss->ply;
         else
             return 0;
     }
 
-    if (!ss->ply) {
-        char mstr[6];
-        move_to_lan(mstr, best_move);
-        printf("info pv %s\n", mstr);
 #ifdef TESTING
-        printf("ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
-#endif
+    if (!ss->ply) {
+        printf("info string ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
     }
+#endif
 
     return alpha;
 }
@@ -209,7 +202,7 @@ void set_stats(SearchStack* ss, Stats& stats)
 }
 
 /* Start searching a position and return the best move */
-Move start_search(Position& pos)
+Move start_search(SearchController& sc)
 {
     Stats stats;
     SearchStack ss[MAX_PLY];
@@ -221,14 +214,77 @@ Move start_search(Position& pos)
 
     set_stats(ss, stats);
 
-    start = std::chrono::high_resolution_clock::now();
+    /* Timing */
+    sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
 
-    for (int depth = 1; depth < MAX_PLY; ++depth) {
-        int score = search(pos, depth, -INF, +INF, ss);
-        end = std::chrono::high_resolution_clock::now();
-        elapsed = end - start;
-        printf("info nodes %" PRIu64 " depth %d score cp %d time %d\n", ss->stats->node_count, depth, score, int(1000*elapsed.count()));
+    if (sc.movetime) {
+        sc.search_end_time = sc.movetime/2;
+    } else if (sc.moves_per_session) {
+        sc.search_end_time = sc.our_clock/sc.moves_per_session + sc.increment;
+    } else {
+        sc.search_end_time = sc.our_clock/40 + sc.increment;
     }
-    Move move = 0;
-    return move;
+
+    sc.search_end_time += sc.search_start_time;
+
+    char mstr[6];
+    Move best_move;
+    int best_score = -INF;
+
+    /* Iterative deepening */
+    for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
+
+        int beta = INF;
+        int alpha = -INF;
+        int depth_best_score = -INF;
+        Move depth_best_move = 0;
+
+        /* Unroll first depth */
+        int movecount = generate(sc.pos, ss->ml);
+
+        Move move;
+        while ((move = next_move(ss, movecount))) {
+
+            Position npos = sc.pos;
+
+            make_move(npos, move);
+            if (is_checked(npos, THEM)) {
+                continue;
+            }
+
+            int score = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1);
+
+            if (score >= depth_best_score) {
+                depth_best_score = score;
+                depth_best_move = move;
+            }
+        }
+
+        // Check time used
+        clock_t time_used = clock() * 1000 / CLOCKS_PER_SEC  - sc.search_start_time;
+
+        // See if we ran out of time
+        if (time_used >= sc.search_end_time - sc.search_start_time) {
+            break;
+        }
+
+        best_score = depth_best_score;
+        best_move = depth_best_move;
+        if (sc.pos.flipped) {
+            best_move = flip_move(best_move);
+        }
+        move_to_lan(mstr, best_move);
+
+        // Update info
+        printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv %s\n", best_score, depth, stats.node_count, time_used, mstr);
+    }
+
+    printf("bestmove %s\n", mstr);
+    return (Move)0;
+}
+
+void search_thread(void* params)
+{
+    SearchController *sc = (SearchController*)params;
+    start_search(*sc);
 }

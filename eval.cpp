@@ -44,9 +44,13 @@ const int phase[7] = {
 template<Phase ph, Piece p = PAWN>
 int evaluate_material(const Position& pos)
 {
-    std::uint64_t pieces = get_piece(pos, p, US);
+    return popcnt(get_piece(pos, p, US)) * piecevals[p] + evaluate_material<p+1>(pos);
+}
 
-    return (popcnt(pieces) * piecevals[ph][p]) + (p == QUEEN ? 0 : evaluate_material<ph, p+1>(pos));
+template<>
+inline int evaluate_material<QUEEN>(const Position& pos)
+{
+    return popcnt(get_piece(pos, QUEEN, US)) * piecevals[QUEEN];
 }
 
 /* Return material phase of a board. */

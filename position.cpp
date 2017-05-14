@@ -29,6 +29,7 @@ SOFTWARE.
 #include "types.h"
 #include "bitboard.h"
 #include "position.h"
+#include "eval.h"
 
 /* The zobrist keys used to hash the position */
 std::uint64_t piece_sq_keys[2][6][64];
@@ -71,7 +72,8 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     std::size_t i = 0, square_idx = 0;
     char c;
 
-    std::memset(&pos, 0, ( sizeof(((Position*)0)->pieces) + sizeof(((Position*)0)->colours) ));
+    std::memset((void*)&pos.pieces, 0, sizeof(pos.pieces));
+    std::memset((void*)&pos.colours, 0, sizeof(pos.colours));
 
     while (square_idx < ARR_LEN(fen_board)) {
 
@@ -237,4 +239,48 @@ void run_fen_parser_tests()
     print_position_struct(tmp);
     parse_fen_to_position((const char*)"rnbqkbnr//pp1ppppp//8//2p5//4P3//5N2//PPPP1PPP//RNBQKB1R b Qkq - 1 2", tmp);
     print_position_struct(tmp);
+}
+
+void print_position(const Position &pos)
+{
+    Position npos = pos;
+    if (pos.flipped) {
+        flip_position(npos);
+    }
+
+    for(int sq = A1; sq <= H8; ++sq) {
+
+        Piece piece = get_piece_on_square(npos, (std::uint64_t)1<<sq);
+
+        switch (piece)
+        {
+        case PAWN:
+            printf("P");
+            break;
+        case KNIGHT:
+            printf("N");
+            break;
+        case BISHOP:
+            printf("B");
+            break;
+        case ROOK:
+            printf("R");
+            break;
+        case QUEEN:
+            printf("Q");
+            break;
+        case KING:
+            printf("K");
+            break;
+        default:
+            printf("-");
+            break;
+        }
+
+        if (sq%8 == 7)
+            printf("\n");
+    }
+
+    printf("Flipped: %i\n", pos.flipped);
+    printf("Eval: %i\n", evaluate(npos));
 }
