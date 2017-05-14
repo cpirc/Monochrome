@@ -264,7 +264,7 @@ Move start_search(SearchController& sc)
         clock_t time_used = clock() * 1000 / CLOCKS_PER_SEC  - sc.search_start_time;
 
         // See if we ran out of time
-        if (time_used >= sc.search_end_time - sc.search_start_time) {
+        if (depth > 1 && time_used >= sc.search_end_time - sc.search_start_time) {
             break;
         }
 
