@@ -92,7 +92,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
     // Check time left
     clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
-    if(current_time >= sc.search_end_time) {
+    if (depth > 1 && current_time >= sc.search_end_time) {
         return 0;
     }
 
