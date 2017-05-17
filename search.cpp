@@ -83,8 +83,8 @@ Move next_move(SearchStack* ss, int& size)
     return best_move;
 }
 
-/* Alpha-Beta search a position to return a score. */
-int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss)
+/* Quiescence alpha-beta search a search leaf node to reduce the horizon effect. */
+int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss)
 {
     if (ss->ply >= MAX_PLY) {
         return evaluate(pos);
@@ -92,7 +92,62 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
     // Check time left
     clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
-    if (depth > 1 && current_time >= sc.search_end_time) {
+    if (current_time >= sc.search_end_time) {
+        return 0;
+    }
+
+    int movecount, value;
+
+    value = evaluate(pos);
+    if (value >= beta)
+        return beta;
+
+    if (value > alpha)
+        alpha = value;
+
+    movecount = generate_captures(pos, ss->ml);
+
+    ++ss->stats->node_count;
+
+    score_moves(pos, ss, movecount);
+
+    Move move;
+    while ((move = next_move(ss, movecount))) {
+
+        Position npos = pos;
+
+        make_move(npos, move);
+        if (is_checked(npos, THEM)) {
+            continue;
+        }
+
+        value = -quiesce(sc, npos, -beta, -alpha, ss + 1);
+
+        if (value >= beta) {
+            return beta;
+        }
+        if (value > alpha) {
+            alpha = value;
+        }
+    }
+
+    return alpha;
+}
+
+/* Alpha-Beta search a position to return a score. */
+int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss)
+{
+    if (depth <= 0) {
+        return quiesce(sc, pos, alpha, beta, ss);
+    }
+
+    if (ss->ply >= MAX_PLY) {
+        return evaluate(pos);
+    }
+
+    // Check time left
+    clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
+    if (ss->ply && current_time >= sc.search_end_time) {
         return 0;
     }
 
@@ -104,24 +159,8 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     }
 
     int movecount, value;
-    const bool quies = depth <= 0;
     const bool in_check = is_checked(pos, US);
-
-    if (quies) {
-        /* Stand pat. */
-        value = evaluate(pos);
-
-        if (value >= beta) {
-            return beta;
-        }
-        if (value > alpha) {
-            alpha = value;
-        }
-
-        movecount = generate_captures(pos, ss->ml);
-    } else {
-        movecount = generate(pos, ss->ml);
-    }
+    movecount = generate(pos, ss->ml);
 
     ++ss->stats->node_count;
 
@@ -158,7 +197,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         }
     }
 
-    if (!legal_moves && !quies) {
+    if (!legal_moves) {
         if (in_check)
             return -INF + ss->ply;
         else
@@ -207,7 +246,6 @@ Move start_search(SearchController& sc)
     Stats stats;
     SearchStack ss[MAX_PLY];
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed;
 
     clear_stats(stats);
     clear_ss(ss, MAX_PLY);
