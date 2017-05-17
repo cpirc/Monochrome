@@ -188,7 +188,7 @@ inline void flip_position(Position& pos)
     // Flip piece bitboards
     std::uint64_t* curr;
     for (curr = pos.pieces; curr < pos.pieces + 6; ++curr)
-        *curr = __builtin_bswap64(*curr);
+        *curr = bswap(*curr);
 
     // Reverse colour bitboards
     std::uint64_t tmp = pos.colours[1];
@@ -197,7 +197,7 @@ inline void flip_position(Position& pos)
 
     // Flip colour bitboards
     for (curr = pos.colours; curr < pos.colours + 2; ++curr)
-        *curr = __builtin_bswap64(*curr);
+        *curr = bswap(*curr);
 
     // Flip epsq
     if (pos.epsq != INVALID_SQUARE)

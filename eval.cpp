@@ -35,7 +35,7 @@ const int piecevals[2][7] = {
 };
 
 /* Phase weights for material. */
-const int phase[7] = {
+const int phase_weights[7] = {
     0, 1, 1, 2, 4, 0, 0
 };
 
@@ -61,7 +61,7 @@ int material_phase(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * phase[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
+    return (popcnt(pieces) * phase_weights[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
 }
 
 /* Return the heuristic value of a position. */

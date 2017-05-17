@@ -67,6 +67,7 @@ extern std::uint64_t pawn_mask[2][64];
 extern std::uint64_t knight_mask[64];
 extern std::uint64_t king_mask[64];
 
+#if defined(__GNUC__)
 /* Get least significant bit. */
 inline Square lsb(std::uint64_t bb)
 {
@@ -79,6 +80,42 @@ inline int popcnt(std::uint64_t bb)
 {
     return __builtin_popcountll(bb);
 }
+
+/* Byte-swap a bitboard. */
+inline std::uint64_t bswap(std::uint64_t bb)
+{
+    return __builtin_bswap64(bb);
+}
+
+#elif defined(_MSC_VER)
+
+#include <intrin.h>
+#include <stdlib.h> // Because MS put an intrinsic in the standard library...
+
+/* Get least significant bit. */
+inline Square lsb(std::uint64_t bb)
+{
+    assert(bb);
+    unsigned long result = 64;
+
+    _BitScanForward64(&result, bb);
+
+#pragma warning(suppress: 4244)
+    return Square(result);
+}
+
+/* Get number of set bits. */
+inline int popcnt(std::uint64_t bb)
+{
+    return __popcnt64(bb);
+}
+
+/* Byte-swap a bitboard. */
+inline std::uint64_t bswap(std::uint64_t bb)
+{
+    return _byteswap_uint64(bb);
+}
+#endif
 
 /* Get attacks for a piece. */
 template<Piece p>
