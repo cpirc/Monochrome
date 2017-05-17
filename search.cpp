@@ -53,6 +53,8 @@ void score_moves(const Position& pos, SearchStack* ss, int size)
             ss->score[i] = mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
             ss->score[i] = piecevals[OPENING][PAWN] - PAWN + 10;
+        else
+            ss->score[i] = 0;
     }
 }
 
@@ -279,6 +281,7 @@ Move start_search(SearchController& sc)
 
         /* Unroll first depth */
         int movecount = generate(sc.pos, ss->ml);
+        score_moves(sc.pos, ss, movecount);
 
         Move move;
         while ((move = next_move(ss, movecount))) {
