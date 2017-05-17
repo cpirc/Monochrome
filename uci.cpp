@@ -443,6 +443,11 @@ void handle_go()
         }
     }
 
+    if (!sc.pos.hash_key) {
+         parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", sc.pos);
+         handle_position_moves();
+    }
+
     std::thread search(search_thread, &sc);
     search.detach();
 }
