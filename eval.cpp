@@ -35,18 +35,22 @@ const int piecevals[2][7] = {
 };
 
 /* Phase weights for material. */
-const int phase[7] = {
+const int phase_weights[7] = {
     0, 1, 1, 2, 4, 0, 0
 };
 
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
-template<Phase ph, Piece p = PAWN>
+template<Piece p = PAWN>
 int evaluate_material(const Position& pos)
 {
-    std::uint64_t pieces = get_piece(pos, p, US);
+    return popcnt(get_piece(pos, p, US)) * piecevals[OPENING][p] + evaluate_material<p+1>(pos);
+}
 
-    return (popcnt(pieces) * piecevals[ph][p]) + (p == QUEEN ? 0 : evaluate_material<ph, p+1>(pos));
+template<>
+inline int evaluate_material<QUEEN>(const Position& pos)
+{
+    return popcnt(get_piece(pos, QUEEN, US)) * piecevals[OPENING][QUEEN];
 }
 
 /* Return material phase of a board. */
@@ -57,7 +61,7 @@ int material_phase(const Position& pos)
 {
     std::uint64_t pieces = get_piece(pos, p, US);
 
-    return (popcnt(pieces) * phase[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
+    return (popcnt(pieces) * phase_weights[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
 }
 
 /* Return the heuristic value of a position. */
@@ -68,8 +72,8 @@ int evaluate(Position& pos)
     Colour side;
 
     for (side = US; side <= THEM; ++side) {
-        opening += evaluate_material<OPENING>(pos);
-        endgame += evaluate_material<ENDGAME>(pos);
+        opening += evaluate_material<>(pos);
+        endgame += evaluate_material<>(pos);
 
         opening = -opening;
         endgame = -endgame;

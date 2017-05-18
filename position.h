@@ -45,10 +45,11 @@ extern std::uint64_t castle_keys[16];
 extern std::uint64_t piece_sq_keys[2][6][64];
 
 extern void initialize_keys();
+extern void print_position(const Position &pos);
 
 /* Extract data from a FEN string to a Position struct */
 extern void parse_fen_to_position(const char* fen_str, Position& pos);
-
+extern void print_position_struct(const Position &pos);
 extern void run_fen_parser_tests();
 
 /* Get the type of piece on a square(bitboard of the square) */
@@ -57,7 +58,15 @@ inline Piece get_piece_on_square(const Position& pos, const std::uint64_t sq)
 {
     if (pos.pieces[piece] & sq)
         return piece;
-    return (piece == KING) ? NO_PIECE : get_piece_on_square<piece+1>(pos, sq);
+    return get_piece_on_square<piece+1>(pos, sq);
+}
+
+template<>
+inline Piece get_piece_on_square<KING>(const Position& pos, const std::uint64_t sq)
+{
+    if (pos.pieces[KING] & sq)
+        return KING;
+    return NO_PIECE;
 }
 
 /* Get the type of piece on a square */
@@ -179,7 +188,7 @@ inline void flip_position(Position& pos)
     // Flip piece bitboards
     std::uint64_t* curr;
     for (curr = pos.pieces; curr < pos.pieces + 6; ++curr)
-        *curr = __builtin_bswap64(*curr);
+        *curr = bswap(*curr);
 
     // Reverse colour bitboards
     std::uint64_t tmp = pos.colours[1];
@@ -188,7 +197,7 @@ inline void flip_position(Position& pos)
 
     // Flip colour bitboards
     for (curr = pos.colours; curr < pos.colours + 2; ++curr)
-        *curr = __builtin_bswap64(*curr);
+        *curr = bswap(*curr);
 
     // Flip epsq
     if (pos.epsq != INVALID_SQUARE)

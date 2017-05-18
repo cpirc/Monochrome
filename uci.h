@@ -22,45 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef SEARCH_H
-#define SEARCH_H
+#ifndef UCI_H
+#define UCI_H
 
-#include "position.h"
-#include "move.h"
-#include <ctime> // clock_t, clock()
+extern int uci_main(int argc, char *argv[]);
 
-#define MAX_PLY (64)
 
-/* Records search statistics */
-struct Stats {
-    std::uint64_t node_count;
-#ifdef TESTING
-    std::uint64_t fail_highs;
-    std::uint64_t first_move_fail_highs;
-#endif
-};
-
-/* A data structure to pass local parameters thru */
-struct SearchStack {
-    std::uint8_t ply;
-    Move ml[256];
-    int score[256];
-    Stats* stats;
-};
-
-struct SearchController {
-    Position pos;
-    std::uint32_t max_depth;
-    std::uint32_t moves_per_session;
-    clock_t increment;
-    clock_t search_start_time;
-    clock_t search_end_time;
-    clock_t our_clock;
-    clock_t movetime;
-};
-
-extern void search_thread(void* params);
-extern void clear_ss(SearchStack* ss, int size);
-extern Move next_move(SearchStack* ss, int& size);
-
-#endif
+#endif //UCI_H
