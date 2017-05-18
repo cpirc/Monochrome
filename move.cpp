@@ -178,7 +178,6 @@ bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
         promo = QUEEN;
         break;
     default:
-        std::puts("PROMOTION PIECE ERROR");
         break;
     }
 
@@ -204,6 +203,68 @@ bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
         }
     }
 
-    std::puts("MOVE NOT FOUND ERROR");
     return false;
+}
+
+bool pv_verify(const Position& pos, PV pv)
+{
+    SearchStack ss[1];
+    clear_ss(ss, 1);
+
+    Position npos = pos;
+
+    for(Move pv_move : pv) {
+        bool found = false;
+        int movecount;
+        movecount = generate(npos, ss->ml);
+
+        Move move;
+        while ((move = next_move(ss, movecount))) {
+
+            if (pos.flipped) {
+                //move = flip_move(move);
+            }
+
+            if (move == pv_move) {
+                make_move(npos, move);
+                found = true;
+            }
+        }
+
+        if (!found) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void print_moves(const Position& pos)
+{
+    SearchStack ss[1];
+    clear_ss(ss, 1);
+
+    int movecount;
+    movecount = generate(pos, ss->ml);
+    printf("Move count: %i\n", movecount);
+    int i = 0;
+
+    Move move;
+    while ((move = next_move(ss, movecount))) {
+
+        Position npos = pos;
+
+        make_move(npos, move);
+        if (is_checked(npos, THEM)) {
+            continue;
+        }
+
+        if (pos.flipped) {
+            move = flip_move(move);
+        }
+
+        char mstr[6];
+        move_to_lan(mstr, move);
+        printf("%i) %s\n", i+1, mstr);
+        i++;
+    }
 }

@@ -33,6 +33,8 @@ enum Piece : unsigned char {
     PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, NO_PIECE
 };
 
+const char Piece_ASCII[7] = {'P', 'N', 'B', 'R', 'Q', 'K', '-'};
+
 /* Colours on a chessboard: */
 enum Colour : unsigned char {
     US, THEM

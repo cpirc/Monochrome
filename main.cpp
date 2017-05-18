@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     if (getline_auto(stdin, protocol, 12)) {
 
-        if (!std::strncmp(protocol, "uci", 3)) {
+        if (!std::strcmp(protocol, "uci")) {
             return uci_main(argc, argv);
         }
 

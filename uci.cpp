@@ -443,10 +443,13 @@ void handle_go()
         }
     }
 
+    /*
+    // make_move() needs to update the position hash before this works
     if (!sc.pos.hash_key) {
          parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", sc.pos);
          handle_position_moves();
     }
+    */
 
     std::thread search(search_thread, &sc);
     search.detach();
@@ -741,6 +744,8 @@ void handle_simple_commands(char *cmd)
         handle_ucinewgame();
     } else if (!std::strcmp(cmd, "print")) {
         print_position(sc.pos);
+    } else if (!std::strcmp(cmd, "moves")) {
+        print_moves(sc.pos);
     } else {
         LOG("Unrecognized token : \"%s\"", cmd);
     }
