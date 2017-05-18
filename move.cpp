@@ -221,10 +221,6 @@ bool pv_verify(const Position& pos, PV pv)
         Move move;
         while ((move = next_move(ss, movecount))) {
 
-            if (pos.flipped) {
-                //move = flip_move(move);
-            }
-
             if (move == pv_move) {
                 make_move(npos, move);
                 found = true;
