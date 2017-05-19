@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <chrono>
+#include <cinttypes>
+#include <vector>
+
 #include "eval.h"
 #include "move.h"
 #include "position.h"
@@ -29,13 +33,16 @@ SOFTWARE.
 
 #define INF     (30000)
 
+/* A principal variation. */
+typedef std::vector<Move> PV;
+
 /* MVV/LVA */
 int mvv_lva(const Position& pos, Move m)
 {
     Piece from = get_piece_on_square(pos, from_square(m));
     Piece dest = get_piece_on_square(pos, to_square(m));
 
-    return piecevals[dest] - from;
+    return piecevals[OPENING][dest] - from;
 }
 
 /* Score a SearchStack. */
@@ -47,9 +54,11 @@ void score_moves(const Position& pos, SearchStack* ss, int size)
         if (mt == CAPTURE)
             ss->score[i] = mvv_lva(pos, move);
         else if (mt == PROM_CAPTURE)
-            ss->score[i] = mvv_lva(pos, move) + piecevals[promotion_type(move)];
+            ss->score[i] = mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
-            ss->score[i] = piecevals[PAWN] - PAWN + 10;
+            ss->score[i] = piecevals[OPENING][PAWN] - PAWN + 10;
+        else
+            ss->score[i] = 0;
     }
 }
 
@@ -80,8 +89,8 @@ Move next_move(SearchStack* ss, int& size)
     return best_move;
 }
 
-/* Alpha-Beta search a position to return a score. */
-int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss)
+/* Quiescence alpha-beta search a search leaf node to reduce the horizon effect. */
+int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss, PV& pv)
 {
     if (ss->ply >= MAX_PLY) {
         return evaluate(pos);
@@ -89,7 +98,66 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
     // Check time left
     clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
-    if(current_time >= sc.search_end_time) {
+    if (current_time >= sc.search_end_time) {
+        return 0;
+    }
+
+    int movecount, value;
+
+    value = evaluate(pos);
+    if (value >= beta)
+        return beta;
+
+    if (value > alpha)
+        alpha = value;
+
+    movecount = generate_captures(pos, ss->ml);
+
+    ++ss->stats->node_count;
+
+    score_moves(pos, ss, movecount);
+
+    Move move;
+    PV child_pv;
+    while ((move = next_move(ss, movecount))) {
+
+        child_pv.clear();
+        Position npos = pos;
+
+        make_move(npos, move);
+        if (is_checked(npos, THEM)) {
+            continue;
+        }
+
+        value = -quiesce(sc, npos, -beta, -alpha, ss + 1, child_pv);
+
+        if (value >= beta) {
+            return beta;
+        }
+        if (value > alpha) {
+            alpha = value;
+            child_pv.push_back(move);
+            pv = std::move(child_pv);
+        }
+    }
+
+    return alpha;
+}
+
+/* Alpha-Beta search a position to return a score. */
+int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
+{
+    if (depth <= 0) {
+        return quiesce(sc, pos, alpha, beta, ss, pv);
+    }
+
+    if (ss->ply >= MAX_PLY) {
+        return evaluate(pos);
+    }
+
+    // Check time left
+    clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
+    if (ss->ply && current_time >= sc.search_end_time) {
         return 0;
     }
 
@@ -101,24 +169,8 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     }
 
     int movecount, value;
-    const bool quies = depth <= 0;
     const bool in_check = is_checked(pos, US);
-
-    if (quies) {
-        /* Stand pat. */
-        value = evaluate(pos);
-
-        if (value >= beta) {
-            return beta;
-        }
-        if (value > alpha) {
-            alpha = value;
-        }
-
-        movecount = generate_captures(pos, ss->ml);
-    } else {
-        movecount = generate(pos, ss->ml);
-    }
+    movecount = generate(pos, ss->ml);
 
     ++ss->stats->node_count;
 
@@ -128,8 +180,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     Move best_move = 0; // reserved for future use.
 
     Move move;
+    PV child_pv;
     while ((move = next_move(ss, movecount))) {
 
+        child_pv.clear();
         Position npos = pos;
 
         make_move(npos, move);
@@ -139,7 +193,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
         ++legal_moves;
 
-        value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1);
+        value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
 
         if (value >= beta) {
 #ifdef TESTING
@@ -152,10 +206,12 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         if (value > alpha) {
             alpha = value;
             best_move = move;
+            child_pv.push_back(move);
+            pv = std::move(child_pv);
         }
     }
 
-    if (!legal_moves && !quies) {
+    if (!legal_moves) {
         if (in_check)
             return -INF + ss->ply;
         else
@@ -202,9 +258,12 @@ void set_stats(SearchStack* ss, Stats& stats)
 Move start_search(SearchController& sc)
 {
     Stats stats;
-    clear_stats(stats);
     SearchStack ss[MAX_PLY];
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
+    clear_stats(stats);
     clear_ss(ss, MAX_PLY);
+
     set_stats(ss, stats);
 
     /* Timing */
@@ -223,6 +282,7 @@ Move start_search(SearchController& sc)
     char mstr[6];
     Move best_move;
     int best_score = -INF;
+    PV pv, child_pv;
 
     /* Iterative deepening */
     for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
@@ -234,10 +294,12 @@ Move start_search(SearchController& sc)
 
         /* Unroll first depth */
         int movecount = generate(sc.pos, ss->ml);
+        score_moves(sc.pos, ss, movecount);
 
         Move move;
         while ((move = next_move(ss, movecount))) {
 
+            child_pv.clear();
             Position npos = sc.pos;
 
             make_move(npos, move);
@@ -245,11 +307,13 @@ Move start_search(SearchController& sc)
                 continue;
             }
 
-            int score = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1);
+            int score = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
 
             if (score >= depth_best_score) {
                 depth_best_score = score;
                 depth_best_move = move;
+                child_pv.push_back(move);
+                pv = std::move(child_pv);
             }
         }
 
@@ -257,22 +321,38 @@ Move start_search(SearchController& sc)
         clock_t time_used = clock() * 1000 / CLOCKS_PER_SEC  - sc.search_start_time;
 
         // See if we ran out of time
-        if (time_used >= sc.search_end_time - sc.search_start_time) {
+        if (depth > 1 && time_used >= sc.search_end_time - sc.search_start_time) {
             break;
         }
 
         best_score = depth_best_score;
-        best_move = depth_best_move;
+
+        // Update info
+        printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+        bool flipped = sc.pos.flipped;
+        for (Move move : pv) {
+            if (flipped) {
+                move = flip_move(move);
+            }
+            move_to_lan(mstr, move);
+            printf("%s ", mstr);
+            flipped ^= 1;
+        }
+	printf("\n");
+    }
+
+    if (pv.size() >= 1) {
+        best_move = pv[0];
         if (sc.pos.flipped) {
             best_move = flip_move(best_move);
         }
         move_to_lan(mstr, best_move);
 
-        // Update info
-        printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv %s\n", best_score, depth, stats.node_count, time_used, mstr);
+        printf("bestmove %s\n", mstr);
+    } else {
+        printf("bestmove 0000\n");
     }
 
-    printf("bestmove %s\n", mstr);
     return (Move)0;
 }
 

@@ -69,7 +69,6 @@ static const unsigned char fen_board[] = {
 
 void parse_fen_to_position(const char *fen_str, Position &pos)
 {
-    //printf("Converting %s\n", fen_str);
     std::size_t i = 0, square_idx = 0;
     char c;
 

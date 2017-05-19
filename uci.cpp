@@ -53,13 +53,10 @@ SOFTWARE.
 
 struct EngineOptions {
     bool debug;
-    //bool registration;
     bool infinite;
-    /* ... */
 } opt = {
-    .debug = false, //debugging is turned off, by default
-    /*.registration = false, //this engine doesn't need registration to fully work*/
-    .infinite = false
+    false, //debugging is turned off, by default
+    false
 };
 
 static SearchController sc;

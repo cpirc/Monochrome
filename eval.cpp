@@ -29,8 +29,9 @@ SOFTWARE.
 #include "types.h"
 
 /* Piece values for material in centipawns. */
-const int piecevals[7] = {
-    100, 300, 300, 500, 950, 0, 0
+const int piecevals[2][7] = {
+    { 100, 300, 300, 500, 900, 0, 0 },
+    { 100, 300, 300, 500, 900, 0, 0 }
 };
 
 /* PST values in centipawns. */
@@ -170,44 +171,60 @@ const int pst[6][2][64] = {
     }
 };
 
+/* Phase weights for material. */
+const int phase_weights[7] = {
+    0, 1, 1, 2, 4, 0, 0
+};
+
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
 template<Piece p = PAWN>
-inline int evaluate_material(const Position& pos)
+int evaluate_material(const Position& pos)
 {
-    return popcnt(get_piece(pos, p, US)) * piecevals[p] + evaluate_material<p+1>(pos);
+    return popcnt(get_piece(pos, p, US)) * piecevals[OPENING][p] + evaluate_material<p+1>(pos);
 }
 
 template<>
 inline int evaluate_material<QUEEN>(const Position& pos)
 {
-    return popcnt(get_piece(pos, QUEEN, US)) * piecevals[QUEEN];
+    return popcnt(get_piece(pos, QUEEN, US)) * piecevals[OPENING][QUEEN];
+}
+
+/* Return material phase of a board. */
+/* 24 = opening, 0 = endgame. */
+/* TODO: incremental update this. */
+template<Piece p = PAWN>
+int material_phase(const Position& pos)
+{
+    std::uint64_t pieces = get_piece(pos, p, US);
+
+    return (popcnt(pieces) * phase_weights[p]) + (p == KING ? 0 : material_phase<p+1>(pos));
 }
 
 /* PST values for the pieces on the board. */
-template<Piece p = PAWN>
+template<Phase ph, Piece p = PAWN>
 inline int evaluate_pst(const Position& pos)
 {
     int score = 0;
     uint64_t pieces = get_piece(pos, p, US);
 
     while (pieces) {
-        score += pst[p][OPENING][lsb(pieces)];
+        score += pst[p][ph][lsb(pieces)];
 
         pieces &= pieces - 1;
     }
 
-    return score + evaluate_pst<p+1>(pos);
+    return score + evaluate_pst<ph, p+1>(pos);
 }
 
-template<>
-inline int evaluate_pst<KING>(const Position& pos)
+template<Phase ph, Piece p = KING>
+inline int evaluate_pst(const Position& pos)
 {
     int score = 0;
     uint64_t pieces = get_piece(pos, KING, US);
 
     while (pieces) {
-        score += pst[KING][OPENING][lsb(pieces)];
+        score += pst[KING][ph][lsb(pieces)];
 
         pieces &= pieces - 1;
     }
@@ -218,16 +235,20 @@ inline int evaluate_pst<KING>(const Position& pos)
 /* Return the heuristic value of a position. */
 int evaluate(Position& pos)
 {
-    int score = 0;
+    int opening = 0, endgame = 0;
+    int phase = material_phase<>(pos);
     Colour side;
 
     for (side = US; side <= THEM; ++side) {
-        score += evaluate_material<>(pos);
-        score += evaluate_pst<>(pos);
+        opening += evaluate_material<>(pos) + evaluate_pst<OPENING>(pos);
+        endgame += evaluate_material<>(pos) + evaluate_pst<ENDGAME>(pos);
 
-        score = -score;
+        opening = -opening;
+        endgame = -endgame;
         flip_position(pos);
     }
+
+    int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
     return pos.flipped ? -score : score;
 }

@@ -71,8 +71,8 @@ enum {
     THEM_OOO = 8
 };
 
-/* Evaluation phases. */
-enum Phase : unsigned char {
+/* Material phases. */
+enum Phase {
     OPENING, ENDGAME
 };
 
