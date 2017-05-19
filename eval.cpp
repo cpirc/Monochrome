@@ -217,14 +217,29 @@ inline int evaluate_pst(const Position& pos)
     return score + evaluate_pst<ph, p+1>(pos);
 }
 
-template<Phase ph, Piece p = KING>
-inline int evaluate_pst(const Position& pos)
+template<>
+inline int evaluate_pst<OPENING, KING>(const Position& pos)
 {
     int score = 0;
     uint64_t pieces = get_piece(pos, KING, US);
 
     while (pieces) {
-        score += pst[KING][ph][lsb(pieces)];
+        score += pst[KING][OPENING][lsb(pieces)];
+
+        pieces &= pieces - 1;
+    }
+
+    return score;
+}
+
+template<>
+inline int evaluate_pst<ENDGAME, KING>(const Position& pos)
+{
+    int score = 0;
+    uint64_t pieces = get_piece(pos, KING, US);
+
+    while (pieces) {
+        score += pst[KING][ENDGAME][lsb(pieces)];
 
         pieces &= pieces - 1;
     }
@@ -250,6 +265,6 @@ int evaluate(Position& pos)
 
     int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
-    return pos.flipped ? -score : score;
+    return score;
 }
 
