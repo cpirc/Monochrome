@@ -67,6 +67,9 @@ enum PromotionType : unsigned int {
 
 typedef unsigned int Move;
 
+/* A principal variation. */
+typedef std::vector<Move> PV;
+
 /* Get from square from move */
 inline Square from_square(const Move move)
 {
@@ -111,4 +114,6 @@ extern int generate_captures(const Position& pos, Move* ml);
 extern void move_to_lan(char* lan_str, const Move move);
 extern bool lan_to_move(const Position& pos, const char* lan_str, Move& move);
 extern void run_move_to_lan_tests(void);
+extern bool pv_verify(const Position& pos, PV pv);
+extern void print_moves(const Position& pos);
 #endif

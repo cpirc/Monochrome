@@ -248,39 +248,25 @@ void print_position(const Position &pos)
         flip_position(npos);
     }
 
-    for(int sq = A1; sq <= H8; ++sq) {
+    int sq = A8;
+    while (sq >= 0) {
 
         Piece piece = get_piece_on_square(npos, (std::uint64_t)1<<sq);
+        bool white = ((std::uint64_t)1<<sq) & get_colour(npos, US);
 
-        switch (piece)
-        {
-        case PAWN:
-            printf("P");
-            break;
-        case KNIGHT:
-            printf("N");
-            break;
-        case BISHOP:
-            printf("B");
-            break;
-        case ROOK:
-            printf("R");
-            break;
-        case QUEEN:
-            printf("Q");
-            break;
-        case KING:
-            printf("K");
-            break;
-        default:
-            printf("-");
-            break;
-        }
+        if (white)
+            printf("%c", Piece_ASCII[piece]);
+        else
+            printf("%c", tolower(Piece_ASCII[piece]));
 
-        if (sq%8 == 7)
+        if (sq%8 == 7) {
             printf("\n");
+            sq -= 16;
+        }
+        sq++;
     }
 
     printf("Flipped: %i\n", pos.flipped);
     printf("Eval: %i\n", evaluate(npos));
+    printf("Hash: %llu\n", pos.hash_key);
 }
