@@ -285,31 +285,8 @@ Move start_search(SearchController& sc)
 
         int beta = INF;
         int alpha = -INF;
-        int depth_best_score = -INF;
 
-        /* Unroll first depth */
-        int movecount = generate(sc.pos, ss->ml);
-        score_moves(sc.pos, ss, movecount);
-
-        Move move;
-        while ((move = next_move(ss, movecount))) {
-
-            child_pv.clear();
-            Position npos = sc.pos;
-
-            make_move(npos, move);
-            if (is_checked(npos, THEM)) {
-                continue;
-            }
-
-            int score = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
-
-            if (score >= depth_best_score) {
-                depth_best_score = score;
-                child_pv.push_back(move);
-                depth_pv = std::move(child_pv);
-            }
-        }
+        int depth_best_score = search(sc, sc.pos, depth, alpha, beta, ss, depth_pv);
 
         // Check time used
         clock_t time_used = clock() * 1000 / CLOCKS_PER_SEC  - sc.search_start_time;
