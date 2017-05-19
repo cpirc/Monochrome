@@ -82,6 +82,6 @@ int evaluate(Position& pos)
 
     int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
-    return pos.flipped ? -score : score;
+    return score;
 }
 
