@@ -90,7 +90,7 @@ Move next_move(SearchStack* ss, int& size)
 }
 
 /* Quiescence alpha-beta search a search leaf node to reduce the horizon effect. */
-int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss, PV& pv)
+int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss)
 {
     if (ss->ply >= MAX_PLY) {
         return evaluate(pos);
@@ -102,6 +102,8 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
         return 0;
     }
 
+    ++ss->stats->node_count;
+
     int movecount, value;
 
     value = evaluate(pos);
@@ -111,35 +113,38 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
     if (value > alpha)
         alpha = value;
 
-    movecount = generate_captures(pos, ss->ml);
-
-    ++ss->stats->node_count;
+    int in_check = is_checked(pos, US);
+    movecount = in_check
+        ? generate(pos, ss->ml)
+        : generate_captures(pos, ss->ml);
 
     score_moves(pos, ss, movecount);
 
+    int legal_moves = 0;
     Move move;
     PV child_pv;
     while ((move = next_move(ss, movecount))) {
 
-        child_pv.clear();
         Position npos = pos;
 
         make_move(npos, move);
         if (is_checked(npos, THEM)) {
             continue;
         }
+        ++legal_moves;
 
-        value = -quiesce(sc, npos, -beta, -alpha, ss + 1, child_pv);
+        value = -quiesce(sc, npos, -beta, -alpha, ss + 1);
 
         if (value >= beta) {
             return beta;
         }
         if (value > alpha) {
             alpha = value;
-            child_pv.push_back(move);
-            pv = std::move(child_pv);
         }
     }
+
+    if (!legal_moves && in_check)
+        return -INF + ss->ply;
 
     return alpha;
 }
@@ -148,7 +153,7 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
     if (depth <= 0) {
-        return quiesce(sc, pos, alpha, beta, ss, pv);
+        return quiesce(sc, pos, alpha, beta, ss);
     }
 
     if (ss->ply >= MAX_PLY) {
@@ -205,8 +210,9 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         }
         if (value > best_value) {
             best_value = value;
-            child_pv.push_back(move);
-            pv = std::move(child_pv);
+            if (!ss->ply) {
+                pv[0] = move;
+            }
             if (value > alpha) {
                 alpha = value;
             }
@@ -248,11 +254,11 @@ void clear_ss(SearchStack* ss, int size)
 }
 
 /* Set the Stats pointer for all ply after 'stats' */
-void set_stats(SearchStack* ss, Stats& stats)
+void set_stats(SearchStack* ss, Stats* stats)
 {
-    SearchStack* end = ss - ss->ply + MAX_PLY;
+    SearchStack* end = ss + MAX_PLY;
     for (; ss < end; ++ss) {
-        ss->stats = &stats;
+        ss->stats = stats;
     }
 }
 
@@ -266,7 +272,7 @@ Move start_search(SearchController& sc)
     clear_stats(stats);
     clear_ss(ss, MAX_PLY);
 
-    set_stats(ss, stats);
+    set_stats(ss, &stats);
 
     /* Timing */
     sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
@@ -282,19 +288,16 @@ Move start_search(SearchController& sc)
     sc.search_end_time += sc.search_start_time;
 
     char mstr[6];
-    Move best_move;
+    Move best_move = 0;
     int best_score = -INF;
     PV pv;
+    pv.reserve(1);
 
     /* Iterative deepening */
     for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
 
         int beta = INF;
         int alpha = -INF;
-
-        /* Unroll first depth */
-        int movecount = generate(sc.pos, ss->ml);
-        score_moves(sc.pos, ss, movecount);
 
         int depth_best_score = search(sc, sc.pos, depth, alpha, beta, ss, pv);
 
@@ -306,35 +309,29 @@ Move start_search(SearchController& sc)
             break;
         }
 
+        best_move = pv[0];
         best_score = depth_best_score;
 
         // Update info
         printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
-        bool flipped = sc.pos.flipped;
-        for (Move move : pv) {
-            if (flipped) {
-                move = flip_move(move);
-            }
-            move_to_lan(mstr, move);
-            printf("%s ", mstr);
-            flipped ^= 1;
-        }
-	printf("\n");
-    }
-
-    if (pv.size() >= 1) {
-        best_move = pv[0];
+        Move move = pv[0];
         if (sc.pos.flipped) {
-            best_move = flip_move(best_move);
+            move = flip_move(move);
         }
-        move_to_lan(mstr, best_move);
+        move_to_lan(mstr, move);
+        printf("%s ", mstr);
 
-        printf("bestmove %s\n", mstr);
-    } else {
-        printf("bestmove 0000\n");
+        printf("\n");
     }
 
-    return (Move)0;
+    if (sc.pos.flipped) {
+        best_move = flip_move(best_move);
+    }
+    move_to_lan(mstr, best_move);
+
+    printf("bestmove %s\n", mstr);
+
+    return pv[0];
 }
 
 void search_thread(void* params)

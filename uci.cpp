@@ -443,11 +443,6 @@ void handle_go()
         }
     }
 
-    if (!sc.pos.hash_key) {
-         parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", sc.pos);
-         handle_position_moves();
-    }
-
     std::thread search(search_thread, &sc);
     search.detach();
 }
@@ -810,6 +805,7 @@ int uci_main(int argc, char *argv[])
     //send_cmd("option \n");
 
     send_cmd("uciok");
+    parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", sc.pos);
 
     static const std::size_t MAX_UCICMD_LEN = 11;
     char token[MAX_UCICMD_LEN];
