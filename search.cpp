@@ -141,6 +141,12 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 /* Alpha-Beta search a position to return a score. */
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
+    const bool in_check = is_checked(pos, US);
+
+    // Check extensions
+    if (in_check)
+        depth++;
+
     if (depth <= 0) {
         return quiesce(sc, pos, alpha, beta, ss);
     }
@@ -163,7 +169,6 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     }
 
     int movecount, value;
-    const bool in_check = is_checked(pos, US);
     movecount = generate(pos, ss->ml);
 
     ++ss->stats->node_count;
