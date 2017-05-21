@@ -176,6 +176,11 @@ const int phase_weights[7] = {
     0, 1, 1, 2, 4, 0, 0
 };
 
+/* Mobility weights for material. */
+const int mobility_weights[7] = {
+    0, 4, 4, 4, 4, 0, 0
+};
+
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
 template<Piece p = PAWN>
@@ -264,6 +269,39 @@ inline int king_safety(const Position& pos)
     return score;
 }
 
+/* Evaluate piece mobility. */
+template<Piece p = KNIGHT>
+int evaluate_mobility(const Position& pos)
+{
+    int score = 0;
+    uint64_t pieces = get_piece(pos, p, US);
+
+    while (pieces) {
+        score += popcnt(attacks<p>(lsb(pieces), get_occupancy(pos)))
+            * mobility_weights[p];
+
+        pieces &= pieces - 1;
+    }
+
+    return score + evaluate_mobility<p+1>(pos);
+}
+
+template<>
+int evaluate_mobility<QUEEN>(const Position& pos)
+{
+    int score = 0;
+    uint64_t pieces = get_piece(pos, QUEEN, US);
+
+    while (pieces) {
+        score += popcnt(attacks<QUEEN>(lsb(pieces), get_occupancy(pos)))
+            * mobility_weights[QUEEN];
+
+        pieces &= pieces - 1;
+    }
+
+    return score;
+}
+
 /* Return the heuristic value of a position. */
 int evaluate(Position& pos)
 {
@@ -278,6 +316,9 @@ int evaluate(Position& pos)
 
         // King safety
         score += king_safety(pos);
+
+        opening += evaluate_mobility<>(pos);
+        endgame += evaluate_mobility<>(pos);
 
         opening = -opening;
         endgame = -endgame;
