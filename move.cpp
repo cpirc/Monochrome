@@ -118,7 +118,7 @@ void move_to_lan(char* lan_str, const Move move)
     lan_str[2] = square_str[(std::size_t)to][0];
     lan_str[3] = square_str[(std::size_t)to][1];
 
-    if (move_type(move) == PROMOTION) {
+    if (promotion_type(move)) {
         switch (promotion_type(move)) {
         case KNIGHT:
             lan_str[4] = 'n';
