@@ -308,25 +308,23 @@ int evaluate(Position& pos)
     int opening = 0, endgame = 0;
     int phase = material_phase<>(pos);
     Colour side;
-    int score = 0;
 
     for (side = US; side <= THEM; ++side) {
         opening += evaluate_material<>(pos) + evaluate_pst<OPENING>(pos);
         endgame += evaluate_material<>(pos) + evaluate_pst<ENDGAME>(pos);
 
         // King safety
-        score += king_safety(pos);
+        opening += king_safety(pos);
 
         opening += evaluate_mobility<>(pos);
         endgame += evaluate_mobility<>(pos);
 
         opening = -opening;
         endgame = -endgame;
-        score = -score;
         flip_position(pos);
     }
 
-    score += ((phase * opening) + ((24 - phase) * endgame)) / 24;
+    int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
     return score;
 }
