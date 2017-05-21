@@ -464,10 +464,10 @@ void handle_perft()
 
     for (int i = 1; i <= (int)depth; ++i) {
         nodes = perft(sc.pos, i);
-        printf("info depth %i nodes %llu\n", i, nodes);
+        printf("info depth %i nodes %" PRIu64 "\n", i, nodes);
     }
 
-    printf("nodes %llu\n", nodes);
+    printf("nodes %" PRIu64 "\n", nodes);
 }
 
 void handle_position_fen()

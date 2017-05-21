@@ -268,5 +268,5 @@ void print_position(const Position &pos)
 
     printf("Flipped: %i\n", pos.flipped);
     printf("Eval: %i\n", evaluate(npos));
-    printf("Hash: %llu\n", pos.hash_key);
+    printf("Hash: %" PRIu64 "\n", pos.hash_key);
 }
