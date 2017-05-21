@@ -82,6 +82,7 @@ static bool read_next_ulong(unsigned long long &x);
 static void handle_debug();
 
 static void handle_go();
+static void handle_perft();
 
 static void handle_position();
 static void handle_position_fen();
@@ -455,6 +456,20 @@ void handle_go()
     search.detach();
 }
 
+void handle_perft()
+{
+    unsigned long long depth;
+    read_next_ulong(depth);
+    std::uint64_t nodes = 0;
+
+    for (int i = 1; i <= (int)depth; ++i) {
+        nodes = perft(sc.pos, i);
+        printf("info depth %i nodes %llu\n", i, nodes);
+    }
+
+    printf("nodes %llu\n", nodes);
+}
+
 void handle_position_fen()
 {
     static const std::size_t MAX_UCICMD_LEN = 128;
@@ -772,6 +787,9 @@ bool handle_all_commands(char *cmd)
     }*/ else if (!std::strcmp(cmd, "setoption")) {
         LOG("setoption command");
         handle_setoption();
+    } else if (!std::strcmp(cmd, "perft")) {
+        LOG("perft command");
+        handle_perft();
     } else {
 
         //this next loop cleans up the rest of the buffer until '\n'.
