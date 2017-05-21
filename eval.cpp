@@ -247,24 +247,45 @@ inline int evaluate_pst<ENDGAME, KING>(const Position& pos)
     return score;
 }
 
+inline int king_safety(const Position& pos)
+{
+    std::uint64_t king_bb     = get_piece(pos, KING, US);
+    Square king_sq            = lsb(king_bb);
+    std::uint64_t surrounding = attacks<KING>(king_sq, (std::uint64_t)0);
+
+    int score = 0;
+
+    // Nearby friendly pieces
+    score += 5*popcnt(surrounding & get_colour(pos, US));
+
+    // Nearby unfriendly pieces
+    //score -= 5*popcnt(surrounding & get_colour(pos, THEM));
+
+    return score;
+}
+
 /* Return the heuristic value of a position. */
 int evaluate(Position& pos)
 {
     int opening = 0, endgame = 0;
     int phase = material_phase<>(pos);
     Colour side;
+    int score = 0;
 
     for (side = US; side <= THEM; ++side) {
         opening += evaluate_material<>(pos) + evaluate_pst<OPENING>(pos);
         endgame += evaluate_material<>(pos) + evaluate_pst<ENDGAME>(pos);
 
+        // King safety
+        score += king_safety(pos);
+
         opening = -opening;
         endgame = -endgame;
+        score = -score;
         flip_position(pos);
     }
 
-    int score = ((phase * opening) + ((24 - phase) * endgame)) / 24;
+    score += ((phase * opening) + ((24 - phase) * endgame)) / 24;
 
     return score;
 }
-
