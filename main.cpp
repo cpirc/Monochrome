@@ -28,6 +28,7 @@ SOFTWARE.
 #include <cassert>
 
 #include "bitboard.h"
+#include "position.h"
 #include "uci.h"
 
 
@@ -69,6 +70,7 @@ bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
 /* The start of all things (after _start) */
 int main(int argc, char *argv[])
 {
+    init_keys();
     init_bitboards();
 
     char protocol[12];

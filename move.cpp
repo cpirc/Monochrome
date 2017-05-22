@@ -93,6 +93,7 @@ void make_move(Position& pos, const Move move)
     }
 
     flip_position(pos);
+    calculate_key(pos);
 }
 
 
