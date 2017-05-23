@@ -42,7 +42,11 @@ inline void seed_rng(std::uint32_t seed)
 inline std::uint64_t get_rand64()
 {
     static std::uniform_int_distribution<std::uint64_t> dist;
-    return dist(rng);
+    std::uint64_t r;
+    do {
+        r = dist(rng);
+    } while (!r);
+    return r;
 }
 
 #endif

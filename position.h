@@ -40,7 +40,6 @@ struct Position {
     std::uint64_t hash_key;   // Zobrist hash of the current position.
 };
 
-extern void initialize_keys();
 extern void print_position(const Position &pos);
 
 /* Extract data from a FEN string to a Position struct */

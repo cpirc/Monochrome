@@ -35,6 +35,7 @@ SOFTWARE.
 std::uint64_t piece_sq_keys[6][64];
 std::uint64_t castle_keys[16];
 std::uint64_t ep_keys[8];
+std::uint64_t flip_key;
 
 /* Initialize the zobrist keys */
 void init_keys()
@@ -51,6 +52,7 @@ void init_keys()
     for (i = 0; i < 8; i++) {
         ep_keys[i] = get_rand64();
     }
+    flip_key = get_rand64();
 }
 
 void calculate_key(Position& pos)
@@ -85,6 +87,9 @@ void calculate_key(Position& pos)
     if (pos.epsq != INVALID_SQUARE) {
         pos.hash_key ^= ep_keys[pos.epsq & 7];
     }
+
+    if (pos.flipped)
+        pos.hash_key ^= flip_key;
 }
 
 #define ARR_LEN(x) (sizeof(x) / sizeof(x[0]))
@@ -265,7 +270,7 @@ void run_fen_parser_tests()
 {
     Position tmp;
 
-    initialize_keys();
+    init_keys();
     parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", tmp);
     print_position_struct(tmp);
     parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);

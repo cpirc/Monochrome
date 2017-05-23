@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
 {
     init_keys();
     init_bitboards();
+    seed_rng(17594872);
 
     char protocol[12];
 
