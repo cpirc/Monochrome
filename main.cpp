@@ -70,9 +70,9 @@ bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
 /* The start of all things (after _start) */
 int main(int argc, char *argv[])
 {
+    seed_rng(17594872);
     init_keys();
     init_bitboards();
-    seed_rng(17594872);
 
     char protocol[12];
 
