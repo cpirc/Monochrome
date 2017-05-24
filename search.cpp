@@ -203,9 +203,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             return beta;
         }
         if (value > best_value) {
-                best_value = value;
-                child_pv.push_back(move);
-                pv = std::move(child_pv);
+            best_value = value;
+            child_pv.push_back(move);
+            pv = std::move(child_pv);
+
             if (value > alpha) {
                 alpha = value;
             }
