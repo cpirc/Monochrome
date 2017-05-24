@@ -40,11 +40,6 @@ struct Position {
     std::uint64_t hash_key;   // Zobrist hash of the current position.
 };
 
-extern std::uint64_t side_keys[2];
-extern std::uint64_t castle_keys[16];
-extern std::uint64_t piece_sq_keys[2][6][64];
-
-extern void initialize_keys();
 extern void print_position(const Position &pos);
 
 /* Extract data from a FEN string to a Position struct */
@@ -131,8 +126,6 @@ inline void move_piece(Position& pos, const Square from, const Square to,
     std::uint64_t from_to = (1ULL << from) ^ (1ULL << to);
     pos.pieces[piece]    ^= from_to;
     pos.colours[colour]  ^= from_to;
-    pos.hash_key         ^= piece_sq_keys[colour][piece][from]
-                          ^ piece_sq_keys[colour][piece][to];
 }
 
 /* Updates the position by putting piece on 'to' */
@@ -142,7 +135,6 @@ inline void put_piece(Position& pos, const Square to, const Piece piece,
     std::uint64_t to_bit = (1ULL << to);
     pos.pieces[piece]   |= to_bit;
     pos.colours[colour] |= to_bit;
-    pos.hash_key        ^= piece_sq_keys[colour][piece][to];
 }
 
 /* Updates the position by removing piece from 'from' */
@@ -152,7 +144,6 @@ inline void remove_piece(Position& pos, const Square from, const Piece piece,
     std::uint64_t from_bit = (1ULL << from);
     pos.pieces[piece]     ^= from_bit;
     pos.colours[colour]   ^= from_bit;
-    pos.hash_key          ^= piece_sq_keys[colour][piece][from];
 }
 
 /* Get any piece attacks to a square. */
@@ -215,4 +206,6 @@ inline void flip_position(Position& pos)
 extern std::uint64_t perft(const Position& pos, int depth);
 extern void run_perft_tests();
 
+extern void init_keys();
+extern void calculate_key(Position& pos);
 #endif

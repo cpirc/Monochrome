@@ -32,27 +32,65 @@ SOFTWARE.
 #include "eval.h"
 
 /* The zobrist keys used to hash the position */
-std::uint64_t piece_sq_keys[2][6][64];
+std::uint64_t piece_sq_keys[6][64];
 std::uint64_t castle_keys[16];
-std::uint64_t side_keys[2];
+std::uint64_t ep_keys[8];
+std::uint64_t flip_key;
 
 /* Initialize the zobrist keys */
-void initialize_keys()
+void init_keys()
 {
-    int i, j, k;
-    for (i = 0; i < 2; ++i) {
-        side_keys[i] = get_rand64();
-        for (j = 0; j < 16; ++j) {
-            castle_keys[j] = get_rand64();
-        }
-        for (j = 0; j < 6; ++j) {
-            for (k = 0; k < 64; ++k) {
-                piece_sq_keys[i][j][k] = get_rand64();
-            }
+    int i, j;
+    for (i = 0; i < 16; ++i) {
+        castle_keys[i] = get_rand64();
+    }
+    for (i = 0; i < 6; ++i) {
+        for (j = 0; j < 64; ++j) {
+            piece_sq_keys[i][j] = get_rand64();
         }
     }
+    for (i = 0; i < 8; i++) {
+        ep_keys[i] = get_rand64();
+    }
+    flip_key = get_rand64();
 }
 
+void calculate_key(Position& pos)
+{
+    std::uint64_t pieces;
+
+    pos.hash_key = 0;
+    pieces = get_colour(pos, US);
+
+    while (pieces) {
+        Square sq = lsb(pieces);
+        Piece pc = get_piece_on_square(pos, sq);
+
+        pos.hash_key ^= piece_sq_keys[pc][sq];
+
+        pieces &= pieces - 1;
+    }
+
+    pieces = get_colour(pos, THEM);
+
+    while (pieces) {
+        Square sq = lsb(pieces);
+        Piece pc = get_piece_on_square(pos, sq);
+
+        pos.hash_key ^= bswap(piece_sq_keys[pc][sq]);
+
+        pieces &= pieces - 1;
+    }
+
+    pos.hash_key ^= castle_keys[pos.castle];
+
+    if (pos.epsq != INVALID_SQUARE) {
+        pos.hash_key ^= ep_keys[pos.epsq & 7];
+    }
+
+    if (pos.flipped)
+        pos.hash_key ^= flip_key;
+}
 
 #define ARR_LEN(x) (sizeof(x) / sizeof(x[0]))
 
@@ -189,6 +227,8 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
     pos.flipped = false;
     if (flipped)
         flip_position(pos);
+
+    calculate_key(pos);
 }
 
 void print_position_struct(const Position &pos)
@@ -230,7 +270,7 @@ void run_fen_parser_tests()
 {
     Position tmp;
 
-    initialize_keys();
+    init_keys();
     parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8//8//8//8//PPPPPPPP//RNBQKBNR w KQkq - 0 1", tmp);
     print_position_struct(tmp);
     parse_fen_to_position((const char*)"rnbqkbnr//pppppppp//8///8//4P3//8//PPPP1PPP//RNBQKBNR b KQkq e3 0 1", tmp);
@@ -246,6 +286,7 @@ void print_position(const Position &pos)
     Position npos = pos;
     if (pos.flipped) {
         flip_position(npos);
+        calculate_key(npos);
     }
 
     int sq = A8;
@@ -268,5 +309,5 @@ void print_position(const Position &pos)
 
     printf("Flipped: %i\n", pos.flipped);
     printf("Eval: %i\n", evaluate(npos));
-    printf("Hash: %" PRIu64 "\n", pos.hash_key);
+    printf("Hash: %" PRIx64 "\n", pos.hash_key);
 }
