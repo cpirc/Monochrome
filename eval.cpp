@@ -181,6 +181,11 @@ const int mobility_weights[7] = {
     0, 4, 4, 4, 4, 0, 0
 };
 
+/* Passed pawn advancement bonus. */
+const int passed_pawn_bonus[8] = {
+    0, 0, 10, 20, 40, 80, 160, 0
+};
+
 /* Return material balance of a board. */
 /* TODO: incremental update this. */
 template<Piece p = PAWN>
@@ -302,6 +307,36 @@ int evaluate_mobility<QUEEN>(const Position& pos)
     return score;
 }
 
+inline int evaluate_passers(const Position& pos)
+{
+    int score = 0;
+    std::uint64_t pawns = get_piece(pos, PAWN, US);
+
+    while (pawns) {
+        int sq = lsb(pawns);
+        int rank = sq >> 3;
+        int file = sq & 7; // Do we have a macro for this?
+
+        std::uint64_t mask = 0;
+
+        if (file >= 1) {
+            mask |= 0x0101010101010101ULL << (sq + 7);
+        }
+
+        if (file <= 6) {
+            mask |= 0x0101010101010101ULL << (sq + 9);
+        }
+
+        if (!(mask & get_piece(pos, PAWN, THEM))) {
+            score += passed_pawn_bonus[rank];
+        }
+
+        pawns &= pawns - 1;
+    }
+
+    return score;
+}
+
 /* Return the heuristic value of a position. */
 int evaluate(Position& pos)
 {
@@ -310,6 +345,7 @@ int evaluate(Position& pos)
     Colour side;
 
     for (side = US; side <= THEM; ++side) {
+        // material + PST
         opening += evaluate_material<>(pos) + evaluate_pst<OPENING>(pos);
         endgame += evaluate_material<>(pos) + evaluate_pst<ENDGAME>(pos);
 
@@ -318,6 +354,10 @@ int evaluate(Position& pos)
 
         opening += evaluate_mobility<>(pos);
         endgame += evaluate_mobility<>(pos);
+
+        // Passed pawns
+        opening += evaluate_passers(pos);
+        endgame += evaluate_passers(pos);
 
         opening = -opening;
         endgame = -endgame;
