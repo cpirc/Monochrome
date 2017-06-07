@@ -54,6 +54,39 @@ std::uint64_t perft(const Position& pos, int depth)
     return nodes;
 }
 
+std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
+{
+    int movecount, i;
+    uint64_t nodes = 0;
+    Move ml[256];
+
+    if (depth == 0) {
+        return 1;
+    }
+
+    TTEntry entry = tt_poll(tt, pos.hash_key);
+    if (entry.hash_key == pos.hash_key && tt_depth(entry.data) == depth) {
+        return tt_eval(entry.data);
+    }
+
+    movecount = generate(pos, ml);
+
+    for (i = 0; i < movecount; i++) {
+
+        Position npos = pos;
+
+        make_move(npos, ml[i]);
+        if (is_checked(npos, THEM))
+            continue;
+
+        nodes += perft_tt(tt, npos, depth - 1);
+    }
+
+    tt_add(tt, pos.hash_key, 1, depth, TT_EXACT, nodes);
+
+    return nodes;
+}
+
 void run_perft_tests()
 {
     int i;
