@@ -727,6 +727,9 @@ void handle_ucinewgame()
 
 void handle_stop()
 {
+    if (running) {
+        sc.search_end_time = 0;
+    }
 }
 
 void handle_ponderhit()
