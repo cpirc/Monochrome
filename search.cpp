@@ -256,6 +256,8 @@ void set_stats(SearchStack* ss, Stats& stats)
     }
 }
 
+#define GUESSED_LENGTH 40
+
 /* Start searching a position and return the best move */
 Move start_search(SearchController& sc)
 {
@@ -274,9 +276,9 @@ Move start_search(SearchController& sc)
     if (sc.movetime) {
         sc.search_end_time = sc.movetime/2;
     } else if (sc.moves_per_session) {
-        sc.search_end_time = sc.our_clock/sc.moves_per_session + sc.increment;
+        sc.search_end_time = (sc.increment * (sc.moves_per_session - 1) + sc.our_clock) / sc.moves_per_session;
     } else {
-        sc.search_end_time = sc.our_clock/40 + sc.increment;
+        sc.search_end_time = (sc.increment * (GUESSED_LENGTH - 1) + sc.our_clock) / GUESSED_LENGTH;
     }
 
     sc.search_end_time += sc.search_start_time;
