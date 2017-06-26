@@ -27,9 +27,8 @@ SOFTWARE.
 
 #include "position.h"
 #include "move.h"
+#include "tt.h"
 #include <ctime> // clock_t, clock()
-
-#define MAX_PLY (64)
 
 /* Records search statistics */
 struct Stats {
@@ -57,6 +56,7 @@ struct SearchController {
     clock_t search_end_time;
     clock_t our_clock;
     clock_t movetime;
+    TT tt;
 };
 
 extern void search_thread(void* params);

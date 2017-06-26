@@ -462,9 +462,14 @@ void handle_perft()
     read_next_ulong(depth);
     std::uint64_t nodes = 0;
 
+    clock_t start_time = clock() * 1000 / CLOCKS_PER_SEC;
     for (int i = 1; i <= (int)depth; ++i) {
-        nodes = perft(sc.pos, i);
-        printf("info depth %i nodes %" PRIu64 "\n", i, nodes);
+
+        //nodes = perft(sc.pos, i);
+        nodes = perft_tt(&sc.tt, sc.pos, i);
+
+        clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
+        printf("info depth %i nodes %" PRIu64 " time %lu\n", i, nodes, current_time - start_time);
     }
 
     printf("nodes %" PRIu64 "\n", nodes);
@@ -834,6 +839,8 @@ int uci_main(int argc, char *argv[])
 
     //send options to the GUI here
     //send_cmd("option \n");
+
+    tt_create(&sc.tt, 128);
 
     send_cmd("uciok");
 

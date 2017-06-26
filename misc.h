@@ -29,6 +29,9 @@ SOFTWARE.
 
 #include "types.h"
 
+#define MAX_PLY (64)
+#define INF (30000)
+
 /* The Mersenne twister random number generator */
 static std::mt19937 rng;
 
