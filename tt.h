@@ -56,7 +56,7 @@ struct TT {
     TTEntry* data;
 };
 
-extern bool tt_create(TT* tt, const int megabytes);
+extern bool tt_create(TT* tt, const std::uint32_t megabytes);
 extern TTEntry tt_poll(TT* tt, const std::uint64_t key);
 extern bool tt_clear(TT* tt);
 extern bool tt_free(TT* tt);

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cassert>
 
-bool tt_create(TT* tt, const int megabytes)
+bool tt_create(TT* tt, const std::uint32_t megabytes)
 {
     assert(tt);
 
@@ -93,7 +93,7 @@ bool tt_add(TT* tt, const std::uint64_t hash_key, const int move, const int dept
     /*
     */
     // Test
-    TTEntry get_entry = tt_poll(tt, hash_key);
+    /*TTEntry get_entry = tt_poll(tt, hash_key);
 
     int get_move = tt_move(get_entry.data);
     int get_depth = tt_depth(get_entry.data);
@@ -106,7 +106,7 @@ bool tt_add(TT* tt, const std::uint64_t hash_key, const int move, const int dept
     assert(get_move == move);
     assert(get_depth == depth);
     assert(get_flag == flag);
-    assert(get_eval == eval);
+    assert(get_eval == eval);*/
 
     return true;
 }

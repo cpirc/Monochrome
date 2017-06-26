@@ -143,6 +143,7 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 }
 
 /* Alpha-Beta search a position to return a score. */
+template<bool pv_node = true>
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
     const bool in_check = is_checked(pos, US);
@@ -182,7 +183,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         int entry_depth = tt_depth(entry.data);
         hash_move = tt_move(entry.data);
 
-        if (entry_depth >= depth) {
+        if (!pv_node && entry_depth >= depth) {
             int entry_eval = eval_from_tt(tt_eval(entry.data), ss->ply);
             int entry_flag = tt_flag(entry.data);
 
@@ -236,7 +237,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
         ++legal_moves;
 
-        value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+        if (legal_moves == 1)
+            value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+        else
+            value = -search<false>(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
 
         if (value > best_value) {
             best_value = value;
@@ -270,7 +274,8 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     //int flag = alpha >= beta ? TT_LOWER : (alpha > old_alpha ? TT_EXACT : TT_UPPER); // Terrible
     //int flag = best_value == old_alpha ? TT_UPPER : TT_EXACT; // Terrible
     //int flag = best_value > old_alpha ?  TT_EXACT: TT_UPPER; // Terrible
-    //tt_add(&sc.tt, pos.hash_key, best_move, depth, flag, eval_to_tt(best_value, ss->ply));
+    int flag = alpha == old_alpha ? TT_UPPER : TT_EXACT;
+    tt_add(&sc.tt, pos.hash_key, best_move, depth, flag, eval_to_tt(best_value, ss->ply));
 
 #ifdef TESTING
     if (!ss->ply) {
