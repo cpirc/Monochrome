@@ -28,20 +28,26 @@ SOFTWARE.
 #include "types.h"
 #include "misc.h"
 
-#define TT_EVAL_SHIFT  (0)
-#define TT_FLAG_SHIFT  (32)
-#define TT_DEPTH_SHIFT (34)
+// TTEntry.data layout
+//     Search: Depth (7b) - Eval (32b) - Flag (2b) - Move (18b)
+//     Perft:  Depth (7b) - Nodes (57b)
+
+#define TT_DEPTH_SHIFT (0)
+#define TT_EVAL_SHIFT  (7)
+#define TT_FLAG_SHIFT  (39)
 #define TT_MOVE_SHIFT  (41)
+#define TT_NODES_SHIFT (7)
 
 #define TT_EVAL_MASK  (0xFFFFFFFF)
 #define TT_FLAG_MASK  (0x3)
 #define TT_DEPTH_MASK (0x7F)
 #define TT_MOVE_MASK  (0x3FFFF)
+#define TT_NODES_MASK (0x1FFFFFFFFFFFFFF)
 
 enum flag : int {
-  TT_LOWER=0,
-  TT_UPPER,
-  TT_EXACT
+    TT_LOWER=0,
+    TT_UPPER,
+    TT_EXACT
 };
 
 /* A transposition table entry */
@@ -61,7 +67,7 @@ extern TTEntry tt_poll(TT* tt, const std::uint64_t key);
 extern bool tt_clear(TT* tt);
 extern bool tt_free(TT* tt);
 extern bool tt_add(TT* tt, const std::uint64_t hash_key, const int move, const int depth, const int flag, const int eval);
-//extern bool tt_add(TT* tt, const std::uint64_t hash_key, const Move move, const int depth, const int flag, const int eval);
+extern bool tt_add_perft(TT* tt, const std::uint64_t hash_key, const int depth, const uint64_t nodes);
 
 inline int eval_to_tt(const int eval, const int ply)
 {
@@ -128,6 +134,12 @@ inline int tt_move(const std::uint64_t data)
 {
     return (data >> TT_MOVE_SHIFT) & TT_MOVE_MASK;
     //return (Move)((data >> TT_MOVE_SHIFT) & TT_MOVE_MASK);
+}
+
+/* Get the transposition table entry node count for TT perft */
+inline int tt_nodes(const std::uint64_t data)
+{
+    return (data >> TT_NODES_SHIFT) & TT_NODES_MASK;
 }
 
 #endif

@@ -66,7 +66,7 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
 
     TTEntry entry = tt_poll(tt, pos.hash_key);
     if (entry.hash_key == pos.hash_key && tt_depth(entry.data) == depth) {
-        return tt_eval(entry.data);
+        return tt_nodes(entry.data);
     }
 
     movecount = generate(pos, ml);
@@ -82,7 +82,7 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
         nodes += perft_tt(tt, npos, depth - 1);
     }
 
-    tt_add(tt, pos.hash_key, 1, depth, TT_EXACT, nodes);
+    tt_add_perft(tt, pos.hash_key, depth, nodes);
 
     return nodes;
 }

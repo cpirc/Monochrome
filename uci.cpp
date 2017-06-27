@@ -473,6 +473,7 @@ void handle_perft()
     }
 
     printf("nodes %" PRIu64 "\n", nodes);
+    tt_clear(&sc.tt);
 }
 
 void handle_position_fen()
