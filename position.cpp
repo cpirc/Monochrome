@@ -229,6 +229,10 @@ void parse_fen_to_position(const char *fen_str, Position &pos)
         flip_position(pos);
 
     calculate_key(pos);
+
+    pos.history.reserve(256);
+    pos.history.clear();
+    pos.history.push_back(pos.hash_key);
 }
 
 void print_position_struct(const Position &pos)
@@ -310,4 +314,38 @@ void print_position(const Position &pos)
     printf("Flipped: %i\n", pos.flipped);
     printf("Eval: %i\n", evaluate(npos));
     printf("Hash: %" PRIx64 "\n", pos.hash_key);
+    printf("History: %" PRIu64 "\n", pos.history.size());
+    for (auto & i : pos.history) {
+        printf("  %" PRIx64 "\n", i);
+    }
+}
+
+bool is_threefold(const Position& pos)
+{
+    int count = 0;
+    for (auto & i : pos.history) {
+        if (i == pos.history.back()) {
+            if (count)
+                return true;
+            count++;
+        }
+    }
+
+    /*
+    // Search backwards
+    for (auto i = pos.history.rbegin(); i != pos.history.rend(); ++i) {
+        if (*i == pos.history.back()) {
+            if (count)
+                return true;
+            count++;
+        }
+    }
+    */
+
+    return false;
+}
+
+bool is_fifty_moves(const Position& pos)
+{
+    return pos.history.size() >= 100;
 }

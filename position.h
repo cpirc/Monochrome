@@ -31,16 +31,19 @@ SOFTWARE.
 
 /* A chess position. */
 struct Position {
-    std::uint64_t pieces[6];  // Bitboards containing piece locations.
-    std::uint64_t colours[2]; // Bitboards containing colours of pieces.
-    std::uint8_t castle;      // Castling rights.
-    bool flipped;             // Has the board been flipped or not?
-    Square epsq;              // En passant square.
-    char fifty;               // Fifty-move rule counter.
-    std::uint64_t hash_key;   // Zobrist hash of the current position.
+    std::uint64_t pieces[6];            // Bitboards containing piece locations.
+    std::uint64_t colours[2];           // Bitboards containing colours of pieces.
+    std::uint8_t castle;                // Castling rights.
+    bool flipped;                       // Has the board been flipped or not?
+    Square epsq;                        // En passant square.
+    char fifty;                         // Fifty-move rule counter.
+    std::uint64_t hash_key;             // Zobrist hash of the current position.
+    std::vector<std::uint64_t> history; // Position history.
 };
 
 extern void print_position(const Position &pos);
+extern bool is_threefold(const Position& pos);
+extern bool is_fifty_moves(const Position& pos);
 
 /* Extract data from a FEN string to a Position struct */
 extern void parse_fen_to_position(const char* fen_str, Position& pos);

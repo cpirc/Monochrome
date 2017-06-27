@@ -146,6 +146,10 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 template<bool pv_node = true>
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
+    if (is_threefold(pos) || is_fifty_moves(pos)) {
+        return 0;
+    }
+
     const bool in_check = is_checked(pos, US);
 
     // Check extensions

@@ -94,8 +94,12 @@ void make_move(Position& pos, const Move move)
 
     flip_position(pos);
     calculate_key(pos);
-}
 
+    if ((mt != NORMAL && mt != CASTLE) || (mt == NORMAL && get_piece_on_square(pos, to) == PAWN)) {
+        pos.history.clear();
+    }
+    pos.history.push_back(pos.hash_key);
+}
 
 static const char *square_str[] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
