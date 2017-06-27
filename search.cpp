@@ -168,6 +168,30 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         }
     }
 
+    ++ss->stats->node_count;
+
+    // Check transposition table
+    Move hash_move = 0;
+    TTEntry entry = tt_poll(&sc.tt, pos.hash_key);
+
+    if (entry.hash_key == pos.hash_key) {
+        int entry_depth = tt_depth(entry.data);
+        hash_move = tt_move(entry.data);
+
+        if (!pv_node && entry_depth >= depth) {
+            int entry_eval = eval_from_tt(tt_eval(entry.data), ss->ply);
+            int entry_flag = tt_flag(entry.data);
+
+            if ( entry_flag == TT_EXACT ||
+                (entry_flag == TT_LOWER && entry_eval >= beta) ||
+                (entry_flag == TT_UPPER && entry_eval <= alpha)) {
+
+                pv.push_back(hash_move);
+                return entry_eval;
+            }
+        }
+    }
+
     int movecount, value;
     movecount = generate(pos, ss->ml);
 
@@ -219,6 +243,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         else
             return 0;
     }
+
+    // Add entry to transposition table
+    int flag = alpha == old_alpha ? TT_UPPER : TT_EXACT;
+    tt_add(&sc.tt, pos.hash_key, best_move, depth, flag, eval_to_tt(best_value, ss->ply));
 
 #ifdef TESTING
     if (!ss->ply) {
