@@ -204,6 +204,7 @@ inline void flip_position(Position& pos)
 }
 
 extern std::uint64_t perft(const Position& pos, int depth);
+extern std::uint64_t perft_tt(TT* tt, const Position& pos, int depth);
 extern void run_perft_tests();
 
 extern void init_keys();

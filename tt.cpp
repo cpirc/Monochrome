@@ -107,8 +107,8 @@ bool tt_add_perft(TT* tt, const std::uint64_t hash_key, const int depth, const u
     entry.data = 0ULL;
     entry.hash_key = hash_key;
 
-    entry.data = ((std::uint64_t)(depth & PERFT_TT_DEPTH_MASK) << PERFT_TT_DEPTH_SHIFT) |
-                 ((std::uint64_t)(nodes & PERFT_TT_NODES_MASK) << PERFT_TT_NODES_SHIFT);
+    entry.data = ((std::uint64_t)(depth & TT_DEPTH_MASK) << TT_DEPTH_SHIFT) |
+                 ((std::uint64_t)(nodes & TT_NODES_MASK) << TT_NODES_SHIFT);
 
     tt->data[index] = entry;
 

@@ -10,7 +10,7 @@ HEADERS = $(wildcard *.h)
 OBJS = $(patsubst %.cpp,%.o,$(CXX_FILES))
 LINKS = -pthread -Wl,--no-as-needed
 
-EXEC = engine
+EXEC = monochrome
 
 all: $(OBJS)
 	$(CXX) $(FLAGS) $^ -o $(EXEC) $(LINKS)
@@ -28,4 +28,4 @@ testing:
 	$(CXX) $(FLAGS) -c $< -o $@
 
 clean:
-	-rm -f $(OBJS)
+	-rm -f $(OBJS) $(EXEC)

@@ -32,8 +32,6 @@ SOFTWARE.
 #include "position.h"
 #include "search.h"
 
-#define INF     (30000)
-
 /* MVV/LVA */
 int mvv_lva(const Position& pos, Move m)
 {
@@ -44,10 +42,16 @@ int mvv_lva(const Position& pos, Move m)
 }
 
 /* Score a SearchStack. */
-void score_moves(const Position& pos, SearchStack* ss, int size)
+void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
 {
     for (int i = 0; i < size; i++) {
         Move move = ss->ml[i];
+
+        if (move == hash_move) {
+            ss->score[i] = 10000;
+            continue;
+        }
+
         int mt = move_type(move);
         if (mt == CAPTURE)
             ss->score[i] = mvv_lva(pos, move);
@@ -113,7 +117,7 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 
     ++ss->stats->node_count;
 
-    score_moves(pos, ss, movecount);
+    score_moves(pos, ss, movecount, 0);
 
     Move move;
     while ((move = next_move(ss, movecount))) {
@@ -139,6 +143,7 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 }
 
 /* Alpha-Beta search a position to return a score. */
+template<bool pv_node = true>
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
     const bool in_check = is_checked(pos, US);
@@ -195,14 +200,14 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     int movecount, value;
     movecount = generate(pos, ss->ml);
 
-    ++ss->stats->node_count;
-
-    score_moves(pos, ss, movecount);
+    score_moves(pos, ss, movecount, hash_move);
 
     int legal_moves = 0;
     int best_value = -INF;
+    int old_alpha = alpha;
 
     Move move;
+    Move best_move = 0;
     PV child_pv;
     while ((move = next_move(ss, movecount))) {
 
@@ -216,24 +221,29 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
         ++legal_moves;
 
-        value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+        if (legal_moves == 1)
+            value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+        else
+            value = -search<false>(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
 
-        if (value >= beta) {
-#ifdef TESTING
-            ++ss->stats->fail_highs;
-            if (legal_moves == 1)
-                ++ss->stats->first_move_fail_highs;
-#endif
-            return beta;
-        }
         if (value > best_value) {
             best_value = value;
+            best_move = move;
             child_pv.push_back(move);
             pv = std::move(child_pv);
 
             if (value > alpha) {
                 alpha = value;
             }
+        }
+        if (value >= beta) {
+#ifdef TESTING
+            ++ss->stats->fail_highs;
+            if (legal_moves == 1)
+                ++ss->stats->first_move_fail_highs;
+#endif
+            tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER, eval_to_tt(value, ss->ply));
+            return beta;
         }
     }
 
@@ -338,9 +348,23 @@ Move start_search(SearchController& sc)
         std::reverse(pv.begin(), pv.end());
 
         best_score = depth_best_score;
+        
+        bool mate = false;
+        if (best_score > INF - MAX_PLY) {
+            mate = true;
+            best_score = INF - best_score;
+        }
+        if (best_score < -INF + MAX_PLY) {
+            mate = true;
+            best_score = -INF + best_score;
+        }
 
         // Update info
-        printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+        if (mate) {
+            printf("info score mate %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+        } else {
+            printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+        }
         bool flipped = sc.pos.flipped;
         for (Move move : pv) {
             if (flipped) {
@@ -351,6 +375,11 @@ Move start_search(SearchController& sc)
             flipped ^= 1;
         }
         printf("\n");
+
+        // Exit if mate found
+        if (mate) {
+            break;
+        }
     }
 
     if (pv.size() >= 1) {
