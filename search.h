@@ -44,6 +44,7 @@ struct SearchStack {
     std::uint8_t ply;
     Move ml[256];
     int score[256];
+    Move killers[2];
     Stats* stats;
 };
 

@@ -48,17 +48,21 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
         Move move = ss->ml[i];
 
         if (move == hash_move) {
-            ss->score[i] = 10000;
+            ss->score[i] = 20000;
             continue;
         }
 
         int mt = move_type(move);
         if (mt == CAPTURE)
-            ss->score[i] = mvv_lva(pos, move);
+            ss->score[i] = 9000 + mvv_lva(pos, move);
         else if (mt == PROM_CAPTURE)
-            ss->score[i] = mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
+            ss->score[i] = 9000 + mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
-            ss->score[i] = piecevals[OPENING][PAWN] - PAWN + 10;
+            ss->score[i] = 9000 + piecevals[OPENING][PAWN] - PAWN + 10;
+	else if (ss->ply >= 2 && ss->killers[0] == move)
+            ss->score[i] = 7000;
+	else if (ss->ply >= 2 && ss->killers[1] == move)
+            ss->score[i] = 6000;
         else
             ss->score[i] = 0;
     }
@@ -242,6 +246,13 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             if (legal_moves == 1)
                 ++ss->stats->first_move_fail_highs;
 #endif
+            if (  !promotion_type(move)
+                && move_type(move) != CAPTURE
+                && move_type(move) != ENPASSANT
+		&& ss->killers[0] != move) {
+                ss->killers[1] = ss->killers[0];
+                ss->killers[0] = move;
+	    }
             tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER, eval_to_tt(value, ss->ply));
             return beta;
         }
@@ -282,6 +293,7 @@ void clear_ss(SearchStack* ss, int size)
 {
     for (std::uint8_t i = 0; i < size; ++i, ++ss) {
         ss->ply = i;
+        ss->killers[0] = ss->killers[1] = 0;
     }
 }
 
