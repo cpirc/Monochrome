@@ -36,7 +36,7 @@ struct Position {
     std::uint8_t castle;                // Castling rights.
     bool flipped;                       // Has the board been flipped or not?
     Square epsq;                        // En passant square.
-    char fifty;                         // Fifty-move rule counter.
+    std::uint8_t halfmoves;             // Fifty-move rule counter.
     std::uint64_t hash_key;             // Zobrist hash of the current position.
     std::vector<std::uint64_t> history; // Position history.
 };

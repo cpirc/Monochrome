@@ -92,12 +92,15 @@ void make_move(Position& pos, const Move move)
         break;
     }
 
+    pos.halfmoves++;
+    if ((mt != NORMAL && mt != CASTLE) || (mt == NORMAL && get_piece_on_square(pos, to) == PAWN)) {
+        pos.history.clear();
+        pos.halfmoves = 0;
+    }
+
     flip_position(pos);
     calculate_key(pos);
 
-    if ((mt != NORMAL && mt != CASTLE) || (mt == NORMAL && get_piece_on_square(pos, to) == PAWN)) {
-        pos.history.clear();
-    }
     pos.history.push_back(pos.hash_key);
 }
 
@@ -263,9 +266,37 @@ void print_moves(const Position& pos)
             move = flip_move(move);
         }
 
+        std::string mtypestr = "";
+        switch (move_type(move)) {
+        case NORMAL:
+            mtypestr = "normal";
+            break;
+        case CAPTURE:
+            mtypestr = "capture";
+            break;
+        case CASTLE:
+            mtypestr = "castle";
+            break;
+        case ENPASSANT:
+            mtypestr = "enpassant";
+            break;
+        case PROMOTION:
+            mtypestr = "promotion";
+            break;
+        case DOUBLE_PUSH:
+            mtypestr = "double pawn";
+            break;
+        case PROM_CAPTURE:
+            mtypestr = "promotion capture";
+            break;
+        default:
+            mtypestr = "ERROR";
+            break;
+        }
+
         char mstr[6];
         move_to_lan(mstr, move);
-        printf("%i) %s\n", i+1, mstr);
+        printf("%i)  %s  (3-fold: %i)  (50-moves: %i)  (Check: %i)  (Type: %s)\n", i+1, mstr, is_threefold(npos), is_fifty_moves(npos), is_checked(npos, US), mtypestr.c_str());
         i++;
     }
 }
