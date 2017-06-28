@@ -319,6 +319,8 @@ inline int evaluate_passers(const Position& pos)
 
         std::uint64_t mask = 0;
 
+        mask |= 0x0101010101010101ULL << (sq + 8);
+
         if (file >= 1) {
             mask |= 0x0101010101010101ULL << (sq + 7);
         }
