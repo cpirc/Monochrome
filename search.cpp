@@ -59,9 +59,9 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
             ss->score[i] = 9000 + mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
             ss->score[i] = 9000 + piecevals[OPENING][PAWN] - PAWN + 10;
-	else if (ss->ply >= 2 && ss->killers[0] == move)
+	else if (ss->killers[0] == move)
             ss->score[i] = 7000;
-	else if (ss->ply >= 2 && ss->killers[1] == move)
+	else if (ss->killers[1] == move)
             ss->score[i] = 6000;
         else
             ss->score[i] = 0;
