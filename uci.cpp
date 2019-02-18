@@ -836,7 +836,7 @@ int uci_main(int argc, char *argv[])
     (void)argv;
 
     send_cmd("id name Monochrome");
-    send_cmd("id author mkchan ZirconiumX Gikoskos");
+    send_cmd("id author flok Gikoskos kz04px mkchan ZirconiumX");
 
     //send options to the GUI here
     //send_cmd("option \n");
