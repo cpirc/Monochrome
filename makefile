@@ -16,7 +16,11 @@ LINKS = -pthread -Wl,--no-as-needed
 
 BIN = monochrome
 
-$(shell mkdir -p obj bin)
+ifeq ($(OS),Windows_NT)
+    $(shell mkdir obj bin)
+else
+    $(shell mkdir -p obj bin)
+endif
 
 all: $(OBJECTS)
 	$(CXX) $(FLAGS) $^ -o $(BINDIR)/$(BIN) $(LINKS)
