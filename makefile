@@ -4,16 +4,20 @@ FLAGS = -pthread -std=c++11 -Wall -Wextra -pipe
 RELEASE_FLAGS = $(FLAGS) -O3 -flto -DNDEBUG
 DEBUG_FLAGS = $(FLAGS) -fno-omit-frame-pointer -g
 
-CXX_FILES = $(wildcard *.cpp)
-HEADERS = $(wildcard *.h)
+SRCDIR = src
+OBJDIR = obj
+BINDIR = bin
 
-OBJS = $(patsubst %.cpp,%.o,$(CXX_FILES))
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+HEADERS = $(wildcard $(SRCDIR)/*.h)
+OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+
 LINKS = -pthread -Wl,--no-as-needed
 
-EXEC = monochrome
+BIN = monochrome
 
-all: $(OBJS)
-	$(CXX) $(FLAGS) $^ -o $(EXEC) $(LINKS)
+all: $(OBJECTS)
+	$(CXX) $(FLAGS) $^ -o $(BINDIR)/$(BIN) $(LINKS)
 
 release:
 	$(MAKE) FLAGS="$(RELEASE_FLAGS)"
@@ -24,8 +28,8 @@ debug:
 testing:
 	$(MAKE) FLAGS="$(FLAGS) -DTESTING"
 
-%.o: %.cpp $(HEADERS)
+$(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
 	$(CXX) $(FLAGS) -c $< -o $@
 
 clean:
-	-rm -f $(OBJS) $(EXEC)
+	-rm -f $(OBJECTS) $(BINDIR)/$(BIN)
