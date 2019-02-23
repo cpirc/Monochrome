@@ -16,6 +16,8 @@ LINKS = -pthread -Wl,--no-as-needed
 
 BIN = monochrome
 
+$(shell mkdir -p obj bin)
+
 all: $(OBJECTS)
 	$(CXX) $(FLAGS) $^ -o $(BINDIR)/$(BIN) $(LINKS)
 
@@ -32,4 +34,4 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
 	$(CXX) $(FLAGS) -c $< -o $@
 
 clean:
-	-rm -f $(OBJECTS) $(BINDIR)/$(BIN)
+	-rm -rf $(OBJDIR) $(BINDIR)
