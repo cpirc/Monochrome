@@ -25,6 +25,7 @@
  *misrepresented as being the original code.
  *
  *3. This notice may not be removed or altered from any source distribution.
+ *
  */
 
 #include "magic_moves.h"
