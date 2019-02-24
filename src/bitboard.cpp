@@ -37,19 +37,17 @@ std::uint64_t king_mask[64];
 
 void init_bitboards()
 {
-    int sq;
-
     initmagicmoves();
 
     // Pawns
-    for (sq = A1; sq <= H8; sq++) {
+    for (int sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
         pawn_mask[US][sq] = ((from << 7) & ~file_mask[FILE_H]) | ((from << 9) & ~file_mask[FILE_A]);
         pawn_mask[THEM][sq] = ((from >> 7) & ~file_mask[FILE_A]) | ((from >> 9) & ~file_mask[FILE_H]);
     }
 
     // Knights
-    for (sq = A1; sq <= H8; sq++) {
+    for (int sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
         knight_mask[sq]  = (from>>17) & (~file_mask[FILE_H]); // Up 2 right 1
         knight_mask[sq] |= (from>>15) & (~file_mask[FILE_A]); // Up 2 left 1
@@ -63,7 +61,7 @@ void init_bitboards()
     }
 
     // Kings
-    for (sq = A1; sq <= H8; sq++) {
+    for (int sq = A1; sq <= H8; sq++) {
         std::uint64_t from = 1ULL << sq;
         king_mask[sq]  = (from>>8); // Up 1
         king_mask[sq] |= (from<<8); // Down 1
