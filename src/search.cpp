@@ -255,10 +255,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             if (  !promotion_type(move)
                 && move_type(move) != CAPTURE
                 && move_type(move) != ENPASSANT
-        && ss->killers[0] != move) {
+                && ss->killers[0] != move) {
                 ss->killers[1] = ss->killers[0];
                 ss->killers[0] = move;
-        }
+            }
             tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER, eval_to_tt(value, ss->ply));
             return beta;
         }
