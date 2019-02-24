@@ -61,9 +61,9 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
             ss->score[i] = 9000 + mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
             ss->score[i] = 9000 + piecevals[OPENING][PAWN] - PAWN + 10;
-	else if (ss->killers[0] == move)
+        else if (ss->killers[0] == move)
             ss->score[i] = 7000;
-	else if (ss->killers[1] == move)
+        else if (ss->killers[1] == move)
             ss->score[i] = 6000;
         else
             ss->score[i] = 0;
@@ -255,10 +255,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             if (  !promotion_type(move)
                 && move_type(move) != CAPTURE
                 && move_type(move) != ENPASSANT
-		&& ss->killers[0] != move) {
+        && ss->killers[0] != move) {
                 ss->killers[1] = ss->killers[0];
                 ss->killers[0] = move;
-	    }
+        }
             tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER, eval_to_tt(value, ss->ply));
             return beta;
         }
