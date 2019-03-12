@@ -24,78 +24,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <cstdio>
-#include <cstring>
-#include <cctype>
-#include <cassert>
+#include <iostream>
+#include <string>
 
 #include "bitboard.h"
 #include "position.h"
 #include "uci.h"
 
-
-/* reads from the file descriptor fd into the pre-allocated buffer pointed to by buff,
- * until either it hits EOF, '\n', or it reads buff_len - 1 characters.
- * Returns true if it read less than buff_len characters (or if the EOF character was read)
- * false otherwise. */
-bool getline_auto(FILE *fd, char *buff, std::size_t buff_len)
-{
-    assert(buff && fd && buff_len);
-
-    std::size_t idx = 0, idx_len = buff_len - 1;
-    int curr;
-    bool ret = true;
-
-    while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n') {
-
-        if (idx == idx_len) {
-            break;
-        }
-
-        if (!std::isblank(curr)) {
-            buff[idx++] = (char)curr;
-        }
-    }
-
-    //flush stdin
-    if (curr != EOF && curr != '\n') {
-        ret = false;
-
-        while ( ((curr = std::fgetc(fd)) != EOF) && curr != '\n');
-    }
-
-    buff[idx] = '\0';
-
-    return ret;
-}
-
-/* The start of all things (after _start) */
-int main(int argc, char *argv[])
+int main()
 {
     seed_rng(17594872);
     init_keys();
     init_bitboards();
 
-    char protocol[12];
-
     std::setbuf(stdout, NULL);
     std::setbuf(stdin, NULL);
 
-    if (getline_auto(stdin, protocol, 12)) {
-
-        if (!std::strcmp(protocol, "uci")) {
-            return uci_main(argc, argv);
+    std::string line;
+    while (true) {
+        std::getline(std::cin, line);
+        if (line == "uci") {
+            UCI::listen();
+        } else if (line == "xboard") {
+            std::cout << "Protocol not supported" << std::endl;
+        } else if (line == "quit") {
+            break;
+        } else {
+            std::cout << "Unknown protocol" << std::endl;
         }
+    }
 
-        std::puts("Unsupported protocol!");
-    } else
-        std::puts("Stack overflow!");
-
-    /*Position pos;
-    parse_fen_to_position("3q3k/1Q4R1/2pNB2p/2Pp3n/8/6P1/3r2r1/7K b - - 3 38", pos);
-    parse_fen_to_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", pos);
-    start_search(pos);*/
-
-    return 1;
+    return 0;
 }
-

@@ -27,7 +27,9 @@ SOFTWARE.
 #ifndef UCI_H
 #define UCI_H
 
-extern int uci_main(int argc, char *argv[]);
-
+namespace UCI
+{
+    extern void listen();
+}
 
 #endif //UCI_H
