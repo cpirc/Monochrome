@@ -45,7 +45,7 @@ namespace UCI
             print_position(sc.pos);
         }
 
-        void perft(std::stringstream &ss)
+        void perft(std::stringstream& ss)
         {
             int depth = 0;
             ss >> depth;
@@ -70,7 +70,7 @@ namespace UCI
             std::cout << "nodes " << nodes << std::endl;
         }
 
-        void ttperft(std::stringstream &ss)
+        void ttperft(std::stringstream& ss)
         {
             int depth = 0;
             ss >> depth;
@@ -111,7 +111,7 @@ namespace UCI
     }
 
     // setoption name Some Name value Some Value
-    void setoption(std::stringstream &ss)
+    void setoption(std::stringstream& ss)
     {
         std::string word;
         std::string name = "";
@@ -140,7 +140,7 @@ namespace UCI
         }
     }
 
-    void go(std::stringstream &ss)
+    void go(std::stringstream& ss)
     {
         sc.max_depth = MAX_PLY;
         sc.moves_per_session = 0;
@@ -177,7 +177,7 @@ namespace UCI
         search.detach();
     }
 
-    void moves(std::stringstream &ss)
+    void moves(std::stringstream& ss)
     {
         std::string word;
         while (ss >> word) {
@@ -197,7 +197,7 @@ namespace UCI
         }
     }
 
-    void position(std::stringstream &ss)
+    void position(std::stringstream& ss)
     {
         std::string fen = "";
 
