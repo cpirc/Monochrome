@@ -62,7 +62,7 @@ struct SearchController {
     TT tt;
 };
 
-extern void search_thread(void* params);
+extern void start_search(SearchController& sc);
 extern void clear_ss(SearchStack* ss, int size);
 extern Move next_move(SearchStack* ss, int& size);
 

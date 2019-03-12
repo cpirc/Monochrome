@@ -173,7 +173,7 @@ namespace UCI
             sc.increment = winc;
         }
 
-        std::thread search(search_thread, &sc);
+        std::thread search(start_search, std::ref(sc));
         search.detach();
     }
 

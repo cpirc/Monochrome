@@ -319,8 +319,8 @@ void set_stats(SearchStack* ss, Stats& stats)
 
 #define GUESSED_LENGTH 40
 
-/* Start searching a position and return the best move */
-Move start_search(SearchController& sc)
+/* Start searching a position */
+void start_search(SearchController& sc)
 {
     Stats stats;
     SearchStack ss[MAX_PLY];
@@ -418,12 +418,4 @@ Move start_search(SearchController& sc)
     } else {
         printf("bestmove 0000\n");
     }
-
-    return (Move)0;
-}
-
-void search_thread(void* params)
-{
-    SearchController *sc = (SearchController*)params;
-    start_search(*sc);
 }
