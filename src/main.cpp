@@ -45,6 +45,7 @@ int main()
         std::getline(std::cin, line);
         if (line == "uci") {
             UCI::listen();
+            break;
         } else if (line == "xboard") {
             std::cout << "Protocol not supported" << std::endl;
         } else if (line == "quit") {
