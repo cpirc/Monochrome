@@ -30,23 +30,20 @@
 #include "bitboard.h"
 #include "move.h"
 
-std::uint64_t perft(const Position& pos, int depth)
+std::uint64_t perft(const Position& pos, const int depth)
 {
-    int movecount, i;
-    uint64_t nodes = 0;
-    Move ml[256];
-
     if (depth == 0) {
         return 1;
     }
 
-    movecount = generate(pos, ml);
+    uint64_t nodes = 0;
+    Move moves[256];
+    int movecount = generate(pos, moves);
 
-    for (i = 0; i < movecount; i++) {
-
+    for (int i = 0; i < movecount; i++) {
         Position npos = pos;
 
-        make_move(npos, ml[i]);
+        make_move(npos, moves[i]);
         if (is_checked(npos, THEM))
             continue;
 
@@ -56,12 +53,8 @@ std::uint64_t perft(const Position& pos, int depth)
     return nodes;
 }
 
-std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
+std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth)
 {
-    int movecount, i;
-    uint64_t nodes = 0;
-    Move ml[256];
-
     if (depth == 0) {
         return 1;
     }
@@ -71,13 +64,14 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
         return tt_nodes(entry.data);
     }
 
-    movecount = generate(pos, ml);
+    uint64_t nodes = 0;
+    Move moves[256];
+    int movecount = generate(pos, moves);
 
-    for (i = 0; i < movecount; i++) {
-
+    for (int i = 0; i < movecount; i++) {
         Position npos = pos;
 
-        make_move(npos, ml[i]);
+        make_move(npos, moves[i]);
         if (is_checked(npos, THEM))
             continue;
 
@@ -91,13 +85,11 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, int depth)
 
 void run_perft_tests()
 {
-    int i;
-
     Position pos;
 
     parse_fen_to_position((const char*)"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", pos);
 
-    for (i = 1; i <= 6; i++) {
+    for (int i = 1; i <= 6; i++) {
         std::printf("Perft(%d) = %" PRIu64 "\n", i, perft(pos, i));
     }
 }
