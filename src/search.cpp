@@ -27,7 +27,7 @@ SOFTWARE.
 #include <chrono>
 #include <cinttypes>
 #include <vector>
-#include <algorithm> // std::reverse
+#include <cassert>
 
 #include "eval.h"
 #include "move.h"
@@ -152,7 +152,9 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 template<bool pv_node = true>
 int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
 {
-    if (is_threefold(pos) || is_fifty_moves(pos)) {
+    assert(ss);
+
+    if (is_fifty_moves(pos) || is_threefold(pos, ss->ply)) {
         return 0;
     }
 
@@ -239,8 +241,11 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         if (value > best_value) {
             best_value = value;
             best_move = move;
-            child_pv.push_back(move);
-            pv = std::move(child_pv);
+
+            // Update PV
+            pv.clear();
+            pv.push_back(move);
+            pv.insert(pv.begin()+1, child_pv.begin(), child_pv.end());
 
             if (value > alpha) {
                 alpha = value;
@@ -342,11 +347,11 @@ Move start_search(SearchController& sc)
     char mstr[6];
     Move best_move;
     int best_score = -INF;
-    PV pv, depth_pv, child_pv;
+    PV pv;
 
     /* Iterative deepening */
     for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
-
+        PV depth_pv;
         int beta = INF;
         int alpha = -INF;
 
@@ -361,12 +366,14 @@ Move start_search(SearchController& sc)
         }
 
         // Only update the best pv if we didn't run out of time
-        // It needs reversing due to the last in first out nature of push_back()
         pv = depth_pv;
-        std::reverse(pv.begin(), pv.end());
+
+        // Verify the pv is legal
+        assert(pv_verify(sc.pos, pv));
+        assert(pv.size() > 0);
 
         best_score = depth_best_score;
-        
+
         bool mate = false;
         if (best_score > INF - MAX_PLY) {
             mate = true;

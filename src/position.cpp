@@ -323,29 +323,21 @@ void print_position(const Position &pos)
     }
 }
 
-bool is_threefold(const Position& pos)
+int repetitions(const Position& pos)
 {
     int count = 0;
-    for (auto & i : pos.history) {
-        if (i == pos.history.back()) {
-            if (count)
-                return true;
+    for (int i = pos.history.size()-3; i >= 0; --i) {
+        if (pos.history[i] == pos.history.back()) {
             count++;
         }
     }
+    return count;
+}
 
-    /*
-    // Search backwards
-    for (auto i = pos.history.rbegin(); i != pos.history.rend(); ++i) {
-        if (*i == pos.history.back()) {
-            if (count)
-                return true;
-            count++;
-        }
-    }
-    */
-
-    return false;
+bool is_threefold(const Position& pos, const int depth_from_root)
+{
+    const int r = repetitions(pos);
+    return r >= 2 || (r == 1 && depth_from_root > 2);
 }
 
 bool is_fifty_moves(const Position& pos)

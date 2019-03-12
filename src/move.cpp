@@ -216,24 +216,20 @@ bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
     return false;
 }
 
-bool pv_verify(const Position& pos, PV pv)
+bool pv_verify(const Position& pos, PV& pv)
 {
-    SearchStack ss[1];
-    clear_ss(ss, 1);
-
     Position npos = pos;
+    Move moves[256];
 
-    for(Move pv_move : pv) {
+    for(const auto &pv_move : pv) {
         bool found = false;
-        int movecount;
-        movecount = generate(npos, ss->ml);
 
-        Move move;
-        while ((move = next_move(ss, movecount))) {
-
-            if (move == pv_move) {
-                make_move(npos, move);
+        int movecount = generate(npos, moves);
+        for (int i = 0; i < movecount; i++) {
+            if (pv_move == moves[i]) {
+                make_move(npos, pv_move);
                 found = true;
+                break;
             }
         }
 
@@ -241,6 +237,7 @@ bool pv_verify(const Position& pos, PV pv)
             return false;
         }
     }
+
     return true;
 }
 

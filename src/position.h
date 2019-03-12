@@ -44,7 +44,8 @@ struct Position {
 };
 
 extern void print_position(const Position &pos);
-extern bool is_threefold(const Position& pos);
+extern int repetitions(const Position& pos);
+extern bool is_threefold(const Position& pos, const int depth_from_root=0);
 extern bool is_fifty_moves(const Position& pos);
 
 /* Extract data from a FEN string to a Position struct */
