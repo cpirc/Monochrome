@@ -27,9 +27,8 @@ SOFTWARE.
 #ifndef UCI_H
 #define UCI_H
 
-namespace UCI
-{
-    extern void listen();
+namespace UCI {
+extern void listen();
 }
 
-#endif //UCI_H
+#endif  // UCI_H

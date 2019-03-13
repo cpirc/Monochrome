@@ -31,8 +31,7 @@ SOFTWARE.
 #include "position.h"
 #include "uci.h"
 
-int main()
-{
+int main() {
     seed_rng(17594872);
     init_keys();
     init_bitboards();

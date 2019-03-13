@@ -27,8 +27,8 @@ SOFTWARE.
 #ifndef MOVE_H
 #define MOVE_H
 
-#include "types.h"
 #include "position.h"
+#include "types.h"
 
 /*
  * The move encoding scheme:
@@ -38,23 +38,23 @@ SOFTWARE.
  * Prom Types   - 4  => 3 bits (Will be storing the piece type and queen is 4)
  */
 
-#define TO_SQ_SHIFT     (6)
+#define TO_SQ_SHIFT (6)
 #define MOVE_TYPE_SHIFT (12)
 #define PROM_TYPE_SHIFT (15)
 
-#define FROM_SQ_MASK   (0x3f)
-#define TO_SQ_MASK     (0xfc0)
+#define FROM_SQ_MASK (0x3f)
+#define TO_SQ_MASK (0xfc0)
 #define MOVE_TYPE_MASK (0x7000)
 #define PROM_TYPE_MASK (0x38000)
 
 /* The various types of moves */
 enum MoveType : unsigned int {
     NORMAL,
-    CASTLE       = 1 << MOVE_TYPE_SHIFT,
-    CAPTURE      = 2 << MOVE_TYPE_SHIFT,
-    ENPASSANT    = 3 << MOVE_TYPE_SHIFT,
-    PROMOTION    = 4 << MOVE_TYPE_SHIFT,
-    DOUBLE_PUSH  = 5 << MOVE_TYPE_SHIFT,
+    CASTLE = 1 << MOVE_TYPE_SHIFT,
+    CAPTURE = 2 << MOVE_TYPE_SHIFT,
+    ENPASSANT = 3 << MOVE_TYPE_SHIFT,
+    PROMOTION = 4 << MOVE_TYPE_SHIFT,
+    DOUBLE_PUSH = 5 << MOVE_TYPE_SHIFT,
     PROM_CAPTURE = 6 << MOVE_TYPE_SHIFT
 };
 
@@ -63,8 +63,8 @@ enum PromotionType : unsigned int {
     NONE,
     TO_KNIGHT = KNIGHT << PROM_TYPE_SHIFT,
     TO_BISHOP = BISHOP << PROM_TYPE_SHIFT,
-    TO_ROOK   = ROOK   << PROM_TYPE_SHIFT,
-    TO_QUEEN  = QUEEN  << PROM_TYPE_SHIFT
+    TO_ROOK = ROOK << PROM_TYPE_SHIFT,
+    TO_QUEEN = QUEEN << PROM_TYPE_SHIFT
 };
 
 typedef unsigned int Move;
@@ -73,40 +73,36 @@ typedef unsigned int Move;
 typedef std::vector<Move> PV;
 
 /* Get from square from move */
-inline Square from_square(const Move move)
-{
+inline Square from_square(const Move move) {
     return Square(move & FROM_SQ_MASK);
 }
 
 /* Get to square from move */
-inline Square to_square(const Move move)
-{
+inline Square to_square(const Move move) {
     return Square((move & TO_SQ_MASK) >> TO_SQ_SHIFT);
 }
 
 /* Get move type from move */
-inline MoveType move_type(const Move move)
-{
+inline MoveType move_type(const Move move) {
     return MoveType(move & MOVE_TYPE_MASK);
 }
 
 /* Get promotion type from move */
-inline Piece promotion_type(const Move move)
-{
+inline Piece promotion_type(const Move move) {
     return Piece((move & PROM_TYPE_MASK) >> PROM_TYPE_SHIFT);
 }
 
 /* Get move by encoding it's components together */
-inline Move get_move(Square from, Square to, MoveType move_type, PromotionType prom_type = NONE)
-{
+inline Move get_move(Square from, Square to, MoveType move_type,
+                     PromotionType prom_type = NONE) {
     return Move(from | (to << TO_SQ_SHIFT) | move_type | prom_type);
 }
 
 /* Flip the move by flipping the to and from squares */
-inline Move flip_move(Move const move)
-{
-    return get_move(Square(from_square(move) ^ 56), Square(to_square(move) ^ 56),
-                    MoveType(MOVE_TYPE_MASK & move), PromotionType(PROM_TYPE_MASK & move));
+inline Move flip_move(Move const move) {
+    return get_move(
+        Square(from_square(move) ^ 56), Square(to_square(move) ^ 56),
+        MoveType(MOVE_TYPE_MASK & move), PromotionType(PROM_TYPE_MASK & move));
 }
 
 extern void make_move(Position& pos, const Move move);

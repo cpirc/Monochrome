@@ -32,81 +32,16 @@ SOFTWARE.
 #include "bitboard.h"
 #include "search.h"
 
-void make_move(Position& pos, const Move move)
-{
-    static unsigned char const castling_lookup[64] = {
-        13, 15, 15, 15, 12, 15, 15, 14,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        7,  15, 15, 15, 3,  15, 15, 11
-    };
-
-    pos.epsq = INVALID_SQUARE;
-
-    const Square from = from_square(move),
-                 to   = to_square(move);
-    const MoveType mt = move_type(move);
-
-    pos.castle &= castling_lookup[from] & castling_lookup[to];
-
-    switch (mt) {
-    case NORMAL:
-        move_piece(pos, from, to, get_piece_on_square(pos, from), US);
-        break;
-    case CAPTURE:
-        remove_piece(pos, to, get_piece_on_square(pos, to), THEM);
-        move_piece(pos, from, to, get_piece_on_square(pos, from), US);
-        break;
-    case DOUBLE_PUSH:
-        move_piece(pos, from, to, PAWN, US);
-        pos.epsq = from + 8;
-        break;
-    case ENPASSANT:
-        move_piece(pos, from, to, PAWN, US);
-        remove_piece(pos, to - 8, PAWN, THEM);
-        break;
-    case CASTLE:
-        move_piece(pos, from, to, KING, US);
-        switch (to) {
-        case C1:
-            move_piece(pos, A1, D1, ROOK, US);
-            break;
-        case G1:
-            move_piece(pos, H1, F1, ROOK, US);
-            break;
-        default:
-            break;
-        }
-        break;
-    case PROM_CAPTURE:
-        remove_piece(pos, to, get_piece_on_square(pos, to), THEM);
-        remove_piece(pos, from, PAWN, US);
-        put_piece(pos, to, promotion_type(move), US);
-        break;
-    case PROMOTION:
-        remove_piece(pos, from, PAWN, US);
-        put_piece(pos, to, promotion_type(move), US);
-        break;
-    default:
-        std::puts("MOVE TYPE ERROR");
-        break;
-    }
-
-    pos.halfmoves++;
-    if ((mt != NORMAL && mt != CASTLE) || (mt == NORMAL && get_piece_on_square(pos, to) == PAWN)) {
-        pos.history.clear();
-        pos.halfmoves = 0;
-    }
-
-    flip_position(pos);
-    calculate_key(pos);
-
-    pos.history.push_back(pos.hash_key);
-}
+static unsigned char const castling_lookup[64] = {
+    13, 15, 15, 15, 12, 15, 15, 14,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    7,  15, 15, 15, 3,  15, 15, 11
+};
 
 static const char *square_str[] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
@@ -119,12 +54,74 @@ static const char *square_str[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
 };
 
-void move_to_lan(char* lan_str, const Move move)
-{
+void make_move(Position& pos, const Move move) {
+    pos.epsq = INVALID_SQUARE;
+
+    const Square from = from_square(move), to = to_square(move);
+    const MoveType mt = move_type(move);
+
+    pos.castle &= castling_lookup[from] & castling_lookup[to];
+
+    switch (mt) {
+        case NORMAL:
+            move_piece(pos, from, to, get_piece_on_square(pos, from), US);
+            break;
+        case CAPTURE:
+            remove_piece(pos, to, get_piece_on_square(pos, to), THEM);
+            move_piece(pos, from, to, get_piece_on_square(pos, from), US);
+            break;
+        case DOUBLE_PUSH:
+            move_piece(pos, from, to, PAWN, US);
+            pos.epsq = from + 8;
+            break;
+        case ENPASSANT:
+            move_piece(pos, from, to, PAWN, US);
+            remove_piece(pos, to - 8, PAWN, THEM);
+            break;
+        case CASTLE:
+            move_piece(pos, from, to, KING, US);
+            switch (to) {
+                case C1:
+                    move_piece(pos, A1, D1, ROOK, US);
+                    break;
+                case G1:
+                    move_piece(pos, H1, F1, ROOK, US);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case PROM_CAPTURE:
+            remove_piece(pos, to, get_piece_on_square(pos, to), THEM);
+            remove_piece(pos, from, PAWN, US);
+            put_piece(pos, to, promotion_type(move), US);
+            break;
+        case PROMOTION:
+            remove_piece(pos, from, PAWN, US);
+            put_piece(pos, to, promotion_type(move), US);
+            break;
+        default:
+            std::puts("MOVE TYPE ERROR");
+            break;
+    }
+
+    pos.halfmoves++;
+    if ((mt != NORMAL && mt != CASTLE) ||
+        (mt == NORMAL && get_piece_on_square(pos, to) == PAWN)) {
+        pos.history.clear();
+        pos.halfmoves = 0;
+    }
+
+    flip_position(pos);
+    calculate_key(pos);
+
+    pos.history.push_back(pos.hash_key);
+}
+
+void move_to_lan(char* lan_str, const Move move) {
     assert(lan_str);
 
-    Square from = from_square(move),
-             to = to_square(move);
+    Square from = from_square(move), to = to_square(move);
 
     lan_str[0] = square_str[(std::size_t)from][0];
     lan_str[1] = square_str[(std::size_t)from][1];
@@ -134,28 +131,27 @@ void move_to_lan(char* lan_str, const Move move)
 
     if (promotion_type(move)) {
         switch (promotion_type(move)) {
-        case KNIGHT:
-            lan_str[4] = 'n';
-            break;
-        case BISHOP:
-            lan_str[4] = 'b';
-            break;
-        case ROOK:
-            lan_str[4] = 'r';
-            break;
-        case QUEEN:
-            lan_str[4] = 'q';
-            break;
-        default:
-            break;
+            case KNIGHT:
+                lan_str[4] = 'n';
+                break;
+            case BISHOP:
+                lan_str[4] = 'b';
+                break;
+            case ROOK:
+                lan_str[4] = 'r';
+                break;
+            case QUEEN:
+                lan_str[4] = 'q';
+                break;
+            default:
+                break;
         }
         lan_str[5] = '\0';
     } else
         lan_str[4] = '\0';
 }
 
-void run_move_to_lan_tests(void)
-{
+void run_move_to_lan_tests(void) {
     char str[6];
 
     move_to_lan(str, get_move(H2, H1, PROMOTION, TO_ROOK));
@@ -170,31 +166,30 @@ void run_move_to_lan_tests(void)
     printf("%s\n", str);
 }
 
-bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
-{
+bool lan_to_move(const Position& pos, const char* lan_str, Move& move) {
     assert(lan_str);
 
-    Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
-             to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
+    Square from = (Square)((lan_str[0] - 'a') + ((lan_str[1] - '1') * 8)),
+           to = (Square)((lan_str[2] - 'a') + ((lan_str[3] - '1') * 8));
     Piece promo = NO_PIECE;
 
     switch (lan_str[4]) {
-    case '\0':
-        break;
-    case 'n':
-        promo = KNIGHT;
-        break;
-    case 'b':
-        promo = BISHOP;
-        break;
-    case 'r':
-        promo = ROOK;
-        break;
-    case 'q':
-        promo = QUEEN;
-        break;
-    default:
-        break;
+        case '\0':
+            break;
+        case 'n':
+            promo = KNIGHT;
+            break;
+        case 'b':
+            promo = BISHOP;
+            break;
+        case 'r':
+            promo = ROOK;
+            break;
+        case 'q':
+            promo = QUEEN;
+            break;
+        default:
+            break;
     }
 
     SearchStack ss[1];
@@ -209,7 +204,8 @@ bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
             current_move = flip_move(current_move);
         }
 
-        if (from_square(current_move) == from && to_square(current_move) == to) {
+        if (from_square(current_move) == from &&
+            to_square(current_move) == to) {
             // FIX ME: This is very ugly
             if (promo != NO_PIECE && promotion_type(current_move) != promo) {
                 continue;
@@ -222,12 +218,11 @@ bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
     return false;
 }
 
-bool pv_verify(const Position& pos, PV& pv)
-{
+bool pv_verify(const Position& pos, PV& pv) {
     Position npos = pos;
     Move moves[256];
 
-    for(const auto &pv_move : pv) {
+    for (const auto& pv_move : pv) {
         bool found = false;
 
         int movecount = generate(npos, moves);
@@ -247,8 +242,7 @@ bool pv_verify(const Position& pos, PV& pv)
     return true;
 }
 
-void print_moves(const Position& pos)
-{
+void print_moves(const Position& pos) {
     SearchStack ss[1];
     clear_ss(ss, 1);
 
@@ -259,7 +253,6 @@ void print_moves(const Position& pos)
 
     Move move;
     while ((move = next_move(ss, movecount))) {
-
         Position npos = pos;
 
         make_move(npos, move);
@@ -273,35 +266,38 @@ void print_moves(const Position& pos)
 
         std::string mtypestr = "";
         switch (move_type(move)) {
-        case NORMAL:
-            mtypestr = "normal";
-            break;
-        case CAPTURE:
-            mtypestr = "capture";
-            break;
-        case CASTLE:
-            mtypestr = "castle";
-            break;
-        case ENPASSANT:
-            mtypestr = "enpassant";
-            break;
-        case PROMOTION:
-            mtypestr = "promotion";
-            break;
-        case DOUBLE_PUSH:
-            mtypestr = "double pawn";
-            break;
-        case PROM_CAPTURE:
-            mtypestr = "promotion capture";
-            break;
-        default:
-            mtypestr = "ERROR";
-            break;
+            case NORMAL:
+                mtypestr = "normal";
+                break;
+            case CAPTURE:
+                mtypestr = "capture";
+                break;
+            case CASTLE:
+                mtypestr = "castle";
+                break;
+            case ENPASSANT:
+                mtypestr = "enpassant";
+                break;
+            case PROMOTION:
+                mtypestr = "promotion";
+                break;
+            case DOUBLE_PUSH:
+                mtypestr = "double pawn";
+                break;
+            case PROM_CAPTURE:
+                mtypestr = "promotion capture";
+                break;
+            default:
+                mtypestr = "ERROR";
+                break;
         }
 
         char mstr[6];
         move_to_lan(mstr, move);
-        printf("%i)  %s  (3-fold: %i)  (50-moves: %i)  (Check: %i)  (Type: %s)\n", i+1, mstr, is_threefold(npos), is_fifty_moves(npos), is_checked(npos, US), mtypestr.c_str());
+        printf(
+            "%i)  %s  (3-fold: %i)  (50-moves: %i)  (Check: %i)  (Type: %s)\n",
+            i + 1, mstr, is_threefold(npos), is_fifty_moves(npos),
+            is_checked(npos, US), mtypestr.c_str());
         i++;
     }
 }

@@ -32,15 +32,19 @@ SOFTWARE.
 
 /* Pieces on a chessboard. */
 enum Piece : unsigned char {
-    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, NO_PIECE
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING,
+    NO_PIECE
 };
 
 const char Piece_ASCII[7] = {'P', 'N', 'B', 'R', 'Q', 'K', '-'};
 
 /* Colours on a chessboard: */
-enum Colour : unsigned char {
-    US, THEM
-};
+enum Colour : unsigned char { US, THEM };
 
 /* Squares on a chessboard */
 enum Square : unsigned char {
@@ -57,40 +61,45 @@ enum Square : unsigned char {
 
 /* Ranks on a chessboard. */
 enum Rank : unsigned char {
-    RANK_1, RANK_2, RANK_3, RANK_4,
-    RANK_5, RANK_6, RANK_7, RANK_8
+    RANK_1,
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8
 };
 
 /* Files on a chessboard. */
 enum File : unsigned char {
-    FILE_A, FILE_B, FILE_C, FILE_D,
-    FILE_E, FILE_F, FILE_G, FILE_H
+    FILE_A,
+    FILE_B,
+    FILE_C,
+    FILE_D,
+    FILE_E,
+    FILE_F,
+    FILE_G,
+    FILE_H
 };
 
 /* Castling rights. */
-enum {
-    US_OO    = 1,
-    US_OOO   = 2,
-    THEM_OO  = 4,
-    THEM_OOO = 8
-};
+enum { US_OO = 1, US_OOO = 2, THEM_OO = 4, THEM_OOO = 8 };
 
 /* Material phases. */
-enum Phase {
-    OPENING, ENDGAME
-};
+enum Phase { OPENING, ENDGAME };
 
-#define ENABLE_OPERATIONS(T)                                                   \
-constexpr inline T operator+(T l, T r)   { return T((int)(l) + (int)(r)); }    \
-constexpr inline T operator+(T l, int r) { return T((int)(l) + r);        }    \
-constexpr inline T operator+(int l, T r) { return T(l + (int)(r));        }    \
-constexpr inline T operator-(T l, T r)   { return T((int)(l) - (int)(r)); }    \
-constexpr inline T operator-(T l, int r) { return T((int)(l) - r);        }    \
-constexpr inline T operator-(int l, T r) { return T(l - (int)(r));        }    \
-inline T operator+=(T& l, T r)           { return l = l + r;              }    \
-inline T operator-=(T& l, T r)           { return l = l - r;              }    \
-inline T operator++(T& l)                { return l = l + 1;              }    \
-inline T operator--(T& l)                { return l = l - 1;              }
+#define ENABLE_OPERATIONS(T)                                                  \
+    constexpr inline T operator+(T l, T r) { return T((int)(l) + (int)(r)); } \
+    constexpr inline T operator+(T l, int r) { return T((int)(l) + r); }      \
+    constexpr inline T operator+(int l, T r) { return T(l + (int)(r)); }      \
+    constexpr inline T operator-(T l, T r) { return T((int)(l) - (int)(r)); } \
+    constexpr inline T operator-(T l, int r) { return T((int)(l)-r); }        \
+    constexpr inline T operator-(int l, T r) { return T(l - (int)(r)); }      \
+    inline T operator+=(T& l, T r) { return l = l + r; }                      \
+    inline T operator-=(T& l, T r) { return l = l - r; }                      \
+    inline T operator++(T& l) { return l = l + 1; }                           \
+    inline T operator--(T& l) { return l = l - 1; }
 
 ENABLE_OPERATIONS(Piece)
 ENABLE_OPERATIONS(Colour)

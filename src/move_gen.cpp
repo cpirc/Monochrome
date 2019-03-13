@@ -33,12 +33,12 @@ SOFTWARE.
 
 /* Castling occupancy masks. */
 static const std::uint64_t oo_castle_mask = (1ULL << F1) | (1ULL << G1);
-static const std::uint64_t ooo_castle_mask = (1ULL << D1) | (1ULL << C1) | (1ULL << B1);
+static const std::uint64_t ooo_castle_mask =
+    (1ULL << D1) | (1ULL << C1) | (1ULL << B1);
 
 /* Generic move serialisation loop. */
-template<bool captures, Piece pc = PAWN>
-void add_moves(const Position & pos, Move* ml, int& idx)
-{
+template <bool captures, Piece pc = PAWN>
+void add_moves(const Position& pos, Move* ml, int& idx) {
     std::uint64_t pieces = get_piece(pos, pc, US);
     std::uint64_t occ = get_occupancy(pos);
     std::uint64_t capturemask = (captures) ? get_colour(pos, THEM) : ~occ;
@@ -61,14 +61,13 @@ void add_moves(const Position & pos, Move* ml, int& idx)
         pieces &= pieces - 1;
     }
 
-    add_moves<captures, pc+1>(pos, ml, idx);
+    add_moves<captures, pc + 1>(pos, ml, idx);
 }
 
 /* Specialisation for pawn quiets. */
 /* (promotions, pawn pushing) */
-template<>
-void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
-{
+template <>
+void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx) {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
     std::uint64_t empty = ~get_occupancy(pos);
     std::uint64_t singles, doubles;
@@ -127,8 +126,8 @@ void add_moves<false, PAWN>(const Position& pos, Move* ml, int& idx)
 
 /* Specialisation for pawn captures. */
 /* (en-passant, capture-promotions) */
-template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
-{
+template <>
+void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx) {
     std::uint64_t pawns = get_piece(pos, PAWN, US);
     std::uint64_t them = get_colour(pos, THEM);
     std::uint64_t dest_bb;
@@ -218,9 +217,8 @@ template<> void add_moves<true, PAWN>(const Position& pos, Move* ml, int& idx)
 
 /* Specialisation for king quiets. */
 /* (Castling, plus an end to the recursion) */
-template<>
-void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
-{
+template <>
+void add_moves<false, KING>(const Position& pos, Move* ml, int& idx) {
     std::uint64_t occ = get_occupancy(pos);
 
     Square from = lsb(get_piece(pos, KING, US));
@@ -238,17 +236,15 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
 
     if (!is_checked(pos, US)) {
         if (pos.castle & US_OO && !(occ & oo_castle_mask) &&
-            !(attacks_to<>(pos, F1, occ, US) & get_colour(pos, THEM))&&
+            !(attacks_to<>(pos, F1, occ, US) & get_colour(pos, THEM)) &&
             !(attacks_to<>(pos, G1, occ, US) & get_colour(pos, THEM))) {
-
             ml[idx] = get_move(E1, G1, CASTLE);
             idx++;
         }
 
         if (pos.castle & US_OOO && !(occ & ooo_castle_mask) &&
-            !(attacks_to<>(pos, D1, occ, US) & get_colour(pos, THEM))&&
+            !(attacks_to<>(pos, D1, occ, US) & get_colour(pos, THEM)) &&
             !(attacks_to<>(pos, C1, occ, US) & get_colour(pos, THEM))) {
-
             ml[idx] = get_move(E1, C1, CASTLE);
             idx++;
         }
@@ -259,9 +255,8 @@ void add_moves<false, KING>(const Position& pos, Move* ml, int& idx)
 
 /* Specialisation for king captures. */
 /* Maybe worth checking for illegal moves? */
-template<>
-void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
-{
+template <>
+void add_moves<true, KING>(const Position& pos, Move* ml, int& idx) {
     std::uint64_t occ = get_colour(pos, US) | get_colour(pos, THEM);
 
     Square from = lsb(get_piece(pos, KING, US));
@@ -281,8 +276,7 @@ void add_moves<true, KING>(const Position& pos, Move* ml, int& idx)
 }
 
 /* Generate moves for a position. */
-int generate(const Position& pos, Move* ml)
-{
+int generate(const Position& pos, Move* ml) {
     int idx = 0;
 
     add_moves<true>(pos, ml, idx);
@@ -292,8 +286,7 @@ int generate(const Position& pos, Move* ml)
 }
 
 /* Generate captures for a position. */
-int generate_captures(const Position& pos, Move* ml)
-{
+int generate_captures(const Position& pos, Move* ml) {
     int idx = 0;
 
     add_moves<true>(pos, ml, idx);

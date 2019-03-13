@@ -12,8 +12,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -24,15 +24,14 @@
  * SOFTWARE.
  */
 
-#include <cinttypes>
 #include <cassert>
+#include <cinttypes>
 
-#include "position.h"
 #include "bitboard.h"
 #include "move.h"
+#include "position.h"
 
-std::uint64_t perft(const Position& pos, const int depth)
-{
+std::uint64_t perft(const Position& pos, const int depth) {
     if (depth == 0) {
         return 1;
     }
@@ -45,8 +44,7 @@ std::uint64_t perft(const Position& pos, const int depth)
         Position npos = pos;
 
         make_move(npos, moves[i]);
-        if (is_checked(npos, THEM))
-            continue;
+        if (is_checked(npos, THEM)) continue;
 
         nodes += perft(npos, depth - 1);
     }
@@ -54,8 +52,7 @@ std::uint64_t perft(const Position& pos, const int depth)
     return nodes;
 }
 
-std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth)
-{
+std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth) {
     assert(tt);
 
     if (depth == 0) {
@@ -70,13 +67,11 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth)
     uint64_t nodes = 0;
     Move moves[256];
     int movecount = generate(pos, moves);
-
     for (int i = 0; i < movecount; i++) {
         Position npos = pos;
 
         make_move(npos, moves[i]);
-        if (is_checked(npos, THEM))
-            continue;
+        if (is_checked(npos, THEM)) continue;
 
         nodes += perft_tt(tt, npos, depth - 1);
     }
@@ -86,12 +81,9 @@ std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth)
     return nodes;
 }
 
-void run_perft_tests()
-{
+void run_perft_tests() {
     Position pos;
-
     parse_fen_to_position((const char*)"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", pos);
-
     for (int i = 1; i <= 6; i++) {
         std::printf("Perft(%d) = %" PRIu64 "\n", i, perft(pos, i));
     }

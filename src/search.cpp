@@ -24,10 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <cassert>
 #include <chrono>
 #include <cinttypes>
 #include <vector>
-#include <cassert>
 
 #include "eval.h"
 #include "move.h"
@@ -35,8 +35,7 @@ SOFTWARE.
 #include "search.h"
 
 /* MVV/LVA */
-int mvv_lva(const Position& pos, Move m)
-{
+int mvv_lva(const Position& pos, Move m) {
     Piece from = get_piece_on_square(pos, from_square(m));
     Piece dest = get_piece_on_square(pos, to_square(m));
 
@@ -44,8 +43,8 @@ int mvv_lva(const Position& pos, Move m)
 }
 
 /* Score a SearchStack. */
-void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
-{
+void score_moves(const Position& pos, SearchStack* ss, int size,
+                 Move hash_move) {
     assert(ss);
 
     for (int i = 0; i < size; i++) {
@@ -60,7 +59,8 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
         if (mt == CAPTURE)
             ss->score[i] = 9000 + mvv_lva(pos, move);
         else if (mt == PROM_CAPTURE)
-            ss->score[i] = 9000 + mvv_lva(pos, move) + piecevals[OPENING][promotion_type(move)];
+            ss->score[i] = 9000 + mvv_lva(pos, move) +
+                           piecevals[OPENING][promotion_type(move)];
         else if (mt == ENPASSANT)
             ss->score[i] = 9000 + piecevals[OPENING][PAWN] - PAWN + 10;
         else if (ss->killers[0] == move)
@@ -73,12 +73,10 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
 }
 
 /* Return the best move from the search stack */
-Move next_move(SearchStack* ss, int& size)
-{
+Move next_move(SearchStack* ss, int& size) {
     assert(ss);
 
-    if (!size)
-        return 0;
+    if (!size) return 0;
 
     // Find best move index
     int best_index = 0;
@@ -101,9 +99,10 @@ Move next_move(SearchStack* ss, int& size)
     return best_move;
 }
 
-/* Quiescence alpha-beta search a search leaf node to reduce the horizon effect. */
-int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss)
-{
+/* Quiescence alpha-beta search a search leaf node to reduce the horizon effect.
+ */
+int quiesce(SearchController& sc, Position& pos, int alpha, int beta,
+            SearchStack* ss) {
     assert(ss);
 
     if (ss->ply >= MAX_PLY) {
@@ -119,11 +118,9 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
     int movecount, value;
 
     value = evaluate(pos);
-    if (value >= beta)
-        return beta;
+    if (value >= beta) return beta;
 
-    if (value > alpha)
-        alpha = value;
+    if (value > alpha) alpha = value;
 
     movecount = generate_captures(pos, ss->ml);
 
@@ -133,7 +130,6 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 
     Move move;
     while ((move = next_move(ss, movecount))) {
-
         Position npos = pos;
 
         make_move(npos, move);
@@ -155,9 +151,9 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStac
 }
 
 /* Alpha-Beta search a position to return a score. */
-template<bool pv_node = true>
-int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, SearchStack* ss, PV& pv)
-{
+template <bool pv_node = true>
+int search(SearchController& sc, Position& pos, int depth, int alpha, int beta,
+           SearchStack* ss, PV& pv) {
     assert(ss);
 
     if (is_fifty_moves(pos) || is_threefold(pos, ss->ply)) {
@@ -167,8 +163,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     const bool in_check = is_checked(pos, US);
 
     // Check extensions
-    if (in_check)
-        depth++;
+    if (in_check) depth++;
 
     if (depth <= 0) {
         return quiesce(sc, pos, alpha, beta, ss);
@@ -185,9 +180,11 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     }
 
     // Update info
-    if (ss->stats->node_count%1048576 == 0) {
+    if (ss->stats->node_count % 1048576 == 0) {
         if (current_time > sc.search_start_time) {
-            printf("info nps %" PRIu64 "\n", 1000*(ss->stats->node_count)/(current_time - sc.search_start_time));
+            printf("info nps %" PRIu64 "\n",
+                   1000 * (ss->stats->node_count) /
+                       (current_time - sc.search_start_time));
         }
     }
 
@@ -205,10 +202,9 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             int entry_eval = eval_from_tt(tt_eval(entry.data), ss->ply);
             int entry_flag = tt_flag(entry.data);
 
-            if ( entry_flag == TT_EXACT ||
+            if (entry_flag == TT_EXACT ||
                 (entry_flag == TT_LOWER && entry_eval >= beta) ||
                 (entry_flag == TT_UPPER && entry_eval <= alpha)) {
-
                 pv.push_back(hash_move);
                 return entry_eval;
             }
@@ -228,7 +224,6 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
     Move best_move = 0;
     PV child_pv;
     while ((move = next_move(ss, movecount))) {
-
         child_pv.clear();
         Position npos = pos;
 
@@ -240,9 +235,11 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         ++legal_moves;
 
         if (legal_moves == 1)
-            value = -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+            value =
+                -search(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
         else
-            value = -search<false>(sc, npos, depth - 1, -beta, -alpha, ss + 1, child_pv);
+            value = -search<false>(sc, npos, depth - 1, -beta, -alpha, ss + 1,
+                                   child_pv);
 
         if (value > best_value) {
             best_value = value;
@@ -251,7 +248,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
             // Update PV
             pv.clear();
             pv.push_back(move);
-            pv.insert(pv.begin()+1, child_pv.begin(), child_pv.end());
+            pv.insert(pv.begin() + 1, child_pv.begin(), child_pv.end());
 
             if (value > alpha) {
                 alpha = value;
@@ -260,17 +257,15 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
         if (value >= beta) {
 #ifdef TESTING
             ++ss->stats->fail_highs;
-            if (legal_moves == 1)
-                ++ss->stats->first_move_fail_highs;
+            if (legal_moves == 1) ++ss->stats->first_move_fail_highs;
 #endif
-            if (  !promotion_type(move)
-                && move_type(move) != CAPTURE
-                && move_type(move) != ENPASSANT
-                && ss->killers[0] != move) {
+            if (!promotion_type(move) && move_type(move) != CAPTURE &&
+                move_type(move) != ENPASSANT && ss->killers[0] != move) {
                 ss->killers[1] = ss->killers[0];
                 ss->killers[0] = move;
             }
-            tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER, eval_to_tt(value, ss->ply));
+            tt_add(&sc.tt, pos.hash_key, move, depth, TT_LOWER,
+                   eval_to_tt(value, ss->ply));
             return beta;
         }
     }
@@ -284,11 +279,14 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 
     // Add entry to transposition table
     int flag = alpha == old_alpha ? TT_UPPER : TT_EXACT;
-    tt_add(&sc.tt, pos.hash_key, best_move, depth, flag, eval_to_tt(best_value, ss->ply));
+    tt_add(&sc.tt, pos.hash_key, best_move, depth, flag,
+           eval_to_tt(best_value, ss->ply));
 
 #ifdef TESTING
     if (!ss->ply) {
-        printf("info string ordering = %lf\n", double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
+        printf(
+            "info string ordering = %lf\n",
+            double(ss->stats->first_move_fail_highs) / ss->stats->fail_highs);
     }
 #endif
 
@@ -296,8 +294,7 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta, 
 }
 
 /* Reset the stats object to 0 so we can start recording */
-void clear_stats(Stats& stats)
-{
+void clear_stats(Stats& stats) {
     stats.node_count = 0;
 #ifdef TESTING
     stats.fail_highs = 0;
@@ -306,8 +303,7 @@ void clear_stats(Stats& stats)
 }
 
 /* Reset the search stack to default values */
-void clear_ss(SearchStack* ss, int size)
-{
+void clear_ss(SearchStack* ss, int size) {
     assert(ss);
     assert(size >= 0);
 
@@ -318,8 +314,7 @@ void clear_ss(SearchStack* ss, int size)
 }
 
 /* Set the Stats pointer for all ply after 'stats' */
-void set_stats(SearchStack* ss, Stats& stats)
-{
+void set_stats(SearchStack* ss, Stats& stats) {
     assert(ss);
 
     SearchStack* end = ss - ss->ply + MAX_PLY;
@@ -331,8 +326,7 @@ void set_stats(SearchStack* ss, Stats& stats)
 #define GUESSED_LENGTH 40
 
 /* Start searching a position */
-void start_search(SearchController& sc)
-{
+void start_search(SearchController& sc) {
     Stats stats;
     SearchStack ss[MAX_PLY];
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
@@ -346,11 +340,15 @@ void start_search(SearchController& sc)
     sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
 
     if (sc.movetime) {
-        sc.search_end_time = sc.movetime/2;
+        sc.search_end_time = sc.movetime / 2;
     } else if (sc.moves_per_session) {
-        sc.search_end_time = (sc.increment * (sc.moves_per_session - 1) + sc.our_clock) / sc.moves_per_session;
+        sc.search_end_time =
+            (sc.increment * (sc.moves_per_session - 1) + sc.our_clock) /
+            sc.moves_per_session;
     } else {
-        sc.search_end_time = (sc.increment * (GUESSED_LENGTH - 1) + sc.our_clock) / GUESSED_LENGTH;
+        sc.search_end_time =
+            (sc.increment * (GUESSED_LENGTH - 1) + sc.our_clock) /
+            GUESSED_LENGTH;
     }
 
     sc.search_end_time += sc.search_start_time;
@@ -366,13 +364,16 @@ void start_search(SearchController& sc)
         int beta = INF;
         int alpha = -INF;
 
-        int depth_best_score = search(sc, sc.pos, depth, alpha, beta, ss, depth_pv);
+        int depth_best_score =
+            search(sc, sc.pos, depth, alpha, beta, ss, depth_pv);
 
         // Check time used
-        clock_t time_used = clock() * 1000 / CLOCKS_PER_SEC  - sc.search_start_time;
+        clock_t time_used =
+            clock() * 1000 / CLOCKS_PER_SEC - sc.search_start_time;
 
         // See if we ran out of time
-        if (depth > 1 && time_used >= sc.search_end_time - sc.search_start_time) {
+        if (depth > 1 &&
+            time_used >= sc.search_end_time - sc.search_start_time) {
             break;
         }
 
@@ -397,9 +398,11 @@ void start_search(SearchController& sc)
 
         // Update info
         if (mate) {
-            printf("info score mate %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+            printf("info score mate %i depth %i nodes %" PRIu64 " time %lu pv ",
+                   best_score, depth, stats.node_count, time_used);
         } else {
-            printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ", best_score, depth, stats.node_count, time_used);
+            printf("info score cp %i depth %i nodes %" PRIu64 " time %lu pv ",
+                   best_score, depth, stats.node_count, time_used);
         }
         bool flipped = sc.pos.flipped;
         for (Move move : pv) {

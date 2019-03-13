@@ -27,10 +27,10 @@ SOFTWARE.
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include "position.h"
+#include <ctime>  // clock_t, clock()
 #include "move.h"
+#include "position.h"
 #include "tt.h"
-#include <ctime> // clock_t, clock()
 
 /* Records search statistics */
 struct Stats {
