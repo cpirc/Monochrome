@@ -155,6 +155,9 @@ void go(std::stringstream& ss) {
         } else if (word == "depth") {
             sc.time_based = false;
             ss >> sc.max_depth;
+        } else if (word == "infinite") {
+            sc.time_based = false;
+            sc.max_depth = MAX_PLY;
         } else if (word == "movetime") {
             ss >> sc.movetime;
         } else if (word == "movestogo") {
