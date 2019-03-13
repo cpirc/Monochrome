@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <cassert>
+
 #include "types.h"
 #include "move.h"
 #include "position.h"
@@ -119,6 +121,8 @@ static const char *square_str[] = {
 
 void move_to_lan(char* lan_str, const Move move)
 {
+    assert(lan_str);
+
     Square from = from_square(move),
              to = to_square(move);
 
@@ -168,6 +172,8 @@ void run_move_to_lan_tests(void)
 
 bool lan_to_move(const Position& pos, const char* lan_str, Move& move)
 {
+    assert(lan_str);
+
     Square from = (Square)( (lan_str[0] - 'a') + ( (lan_str[1] - '1') * 8 ) ),
              to = (Square)( (lan_str[2] - 'a') + ( (lan_str[3] - '1') * 8 ) );
     Piece promo = NO_PIECE;

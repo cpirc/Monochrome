@@ -46,6 +46,8 @@ int mvv_lva(const Position& pos, Move m)
 /* Score a SearchStack. */
 void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
 {
+    assert(ss);
+
     for (int i = 0; i < size; i++) {
         Move move = ss->ml[i];
 
@@ -73,6 +75,8 @@ void score_moves(const Position& pos, SearchStack* ss, int size, Move hash_move)
 /* Return the best move from the search stack */
 Move next_move(SearchStack* ss, int& size)
 {
+    assert(ss);
+
     if (!size)
         return 0;
 
@@ -100,6 +104,8 @@ Move next_move(SearchStack* ss, int& size)
 /* Quiescence alpha-beta search a search leaf node to reduce the horizon effect. */
 int quiesce(SearchController& sc, Position& pos, int alpha, int beta, SearchStack* ss)
 {
+    assert(ss);
+
     if (ss->ply >= MAX_PLY) {
         return evaluate(pos);
     }
@@ -302,6 +308,9 @@ void clear_stats(Stats& stats)
 /* Reset the search stack to default values */
 void clear_ss(SearchStack* ss, int size)
 {
+    assert(ss);
+    assert(size >= 0);
+
     for (std::uint8_t i = 0; i < size; ++i, ++ss) {
         ss->ply = i;
         ss->killers[0] = ss->killers[1] = 0;
@@ -311,6 +320,8 @@ void clear_ss(SearchStack* ss, int size)
 /* Set the Stats pointer for all ply after 'stats' */
 void set_stats(SearchStack* ss, Stats& stats)
 {
+    assert(ss);
+
     SearchStack* end = ss - ss->ply + MAX_PLY;
     for (; ss < end; ++ss) {
         ss->stats = &stats;

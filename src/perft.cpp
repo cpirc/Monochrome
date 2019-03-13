@@ -25,6 +25,7 @@
  */
 
 #include <cinttypes>
+#include <cassert>
 
 #include "position.h"
 #include "bitboard.h"
@@ -55,6 +56,8 @@ std::uint64_t perft(const Position& pos, const int depth)
 
 std::uint64_t perft_tt(TT* tt, const Position& pos, const int depth)
 {
+    assert(tt);
+
     if (depth == 0) {
         return 1;
     }
