@@ -135,6 +135,7 @@ void go(std::stringstream& ss) {
     sc.search_start_time = 0;
     sc.search_end_time = 0;
     sc.movetime = 0;
+    sc.time_based = true;
 
     int wtime = -1;
     int btime = -1;
@@ -152,6 +153,7 @@ void go(std::stringstream& ss) {
         } else if (word == "binc") {
             ss >> binc;
         } else if (word == "depth") {
+            sc.time_based = false;
             ss >> sc.max_depth;
         } else if (word == "movetime") {
             ss >> sc.movetime;
@@ -171,6 +173,8 @@ void go(std::stringstream& ss) {
     std::thread search(start_search, std::ref(sc));
     search.detach();
 }
+
+void stop() { sc.abort = true; }
 
 void moves(std::stringstream& ss) {
     std::string word;
@@ -253,6 +257,8 @@ void listen() {
             position(ss);
         } else if (word == "go") {
             go(ss);
+        } else if (word == "stop") {
+            stop();
         } else if (word == "print") {
             Extension::print();
         } else if (word == "perft") {

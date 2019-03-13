@@ -111,7 +111,10 @@ int quiesce(SearchController& sc, Position& pos, int alpha, int beta,
 
     // Check time left
     clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
-    if (current_time >= sc.search_end_time) {
+    if (sc.time_based && current_time >= sc.search_end_time) {
+        return 0;
+    }
+    if (sc.abort) {
         return 0;
     }
 
@@ -175,7 +178,10 @@ int search(SearchController& sc, Position& pos, int depth, int alpha, int beta,
 
     // Check time left
     clock_t current_time = clock() * 1000 / CLOCKS_PER_SEC;
-    if (ss->ply && current_time >= sc.search_end_time) {
+    if (sc.time_based && ss->ply && current_time >= sc.search_end_time) {
+        return 0;
+    }
+    if (sc.abort) {
         return 0;
     }
 
@@ -337,21 +343,25 @@ void start_search(SearchController& sc) {
     set_stats(ss, stats);
 
     /* Timing */
-    sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
+    if (sc.time_based) {
+        sc.search_start_time = 1000 * clock() / CLOCKS_PER_SEC;
 
-    if (sc.movetime) {
-        sc.search_end_time = sc.movetime / 2;
-    } else if (sc.moves_per_session) {
-        sc.search_end_time =
-            (sc.increment * (sc.moves_per_session - 1) + sc.our_clock) /
-            sc.moves_per_session;
-    } else {
-        sc.search_end_time =
-            (sc.increment * (GUESSED_LENGTH - 1) + sc.our_clock) /
-            GUESSED_LENGTH;
+        if (sc.movetime) {
+            sc.search_end_time = sc.movetime / 2;
+        } else if (sc.moves_per_session) {
+            sc.search_end_time =
+                (sc.increment * (sc.moves_per_session - 1) + sc.our_clock) /
+                sc.moves_per_session;
+        } else {
+            sc.search_end_time =
+                (sc.increment * (GUESSED_LENGTH - 1) + sc.our_clock) /
+                GUESSED_LENGTH;
+        }
+
+        sc.search_end_time += sc.search_start_time;
     }
 
-    sc.search_end_time += sc.search_start_time;
+    sc.abort = false;
 
     char mstr[6];
     Move best_move;
@@ -359,7 +369,7 @@ void start_search(SearchController& sc) {
     PV pv;
 
     /* Iterative deepening */
-    for (std::uint32_t depth = 1; depth < sc.max_depth; ++depth) {
+    for (std::uint32_t depth = 1; depth <= sc.max_depth; ++depth) {
         PV depth_pv;
         int beta = INF;
         int alpha = -INF;
@@ -372,8 +382,11 @@ void start_search(SearchController& sc) {
             clock() * 1000 / CLOCKS_PER_SEC - sc.search_start_time;
 
         // See if we ran out of time
-        if (depth > 1 &&
+        if (depth > 1 && sc.time_based &&
             time_used >= sc.search_end_time - sc.search_start_time) {
+            break;
+        }
+        if (sc.abort) {
             break;
         }
 

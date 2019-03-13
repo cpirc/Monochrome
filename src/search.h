@@ -59,6 +59,8 @@ struct SearchController {
     clock_t search_end_time;
     clock_t our_clock;
     clock_t movetime;
+    bool time_based;
+    volatile bool abort;
     TT tt;
 };
 
